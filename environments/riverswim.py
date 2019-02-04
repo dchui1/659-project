@@ -1,4 +1,9 @@
-class RiverSwim:
+import numpy as np
+from environments.Environment import Environment
+import random
+
+class RiverSwim(Environment):
+  steps = 0
   def __init__(self):
     self.STEPS_LIMIT = 10000 # number of steps in each episode?
     self.pos = 0
@@ -33,10 +38,13 @@ class RiverSwim:
     # make sure that the position we return (the next state) is between 0 and 5
     self.pos = np.clip(self.pos, 0, 5)
 
+    done = self.STEPS_LIMIT == self.steps
+    self.steps += 1
+
     # tuple indicating (state, reward, terminated, action)
-    # note this is a continuing task, so the environment will never send a
-    # termination signal
-    return (self.pos, self.rewardFunction(old_pos, a), False, a)
+    # note this is a continuing task, so the environment will only
+    # terminate when max number of steps is reached
+    return (self.pos, self.rewardFunction(old_pos, a), done, a)
 
   def rewardFunction(self, x, a):
     if x >= 5 and a == 1:
@@ -45,10 +53,10 @@ class RiverSwim:
       return 5.0/1000.0
     return 0.0
 
-  def numObservations(self):
+  def observationShape(self):
     # position on the river.
     # states are: 0, 1, 2, 3, 4, 5
-    return 1
+    return [6]
 
   def numActions(self):
     # (0) stay or (1) swim up the river

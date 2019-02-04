@@ -12,10 +12,7 @@ import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import gym
-import gym_gridworlds
-
-
+from environments.gridworld import GridWorld
 
 class Optimal:
   def __init__(self, num_states, num_acts):
@@ -42,7 +39,7 @@ class Q:
     self.num_states = num_states
     self.num_acts = num_acts
 
-    self.Q = np.zeros((self.num_states, self.num_acts))
+    self.Q = np.zeros(self.num_states + [self.num_acts])
     self.next_action = 0
 
   def policy(self, S):
@@ -79,17 +76,16 @@ class Q:
 
   def breakTie(self, act_vals):
     indexes = np.where(act_vals == np.max(act_vals))[0]
-    print("Indexes in break tie", indexes)
     if len(indexes) < 1:
-      print(indexes, act_vals)
-      return 0
+      raise ArithmeticError()
+
     return np.random.choice(indexes)
 
 """####Q-learning Agent with No Bonus"""
 
 class TabularBayesianApproximation:
   def __init__(self, num_states, num_acts):
-    self.B = np.zeros((num_states, num_acts, 4))
+    self.B = np.zeros(num_states + [num_acts, 4])
     # prior sample mean
     # prior "observations to make that mean"
     # prior "observations to make our variance" # try to make it hard to reduce this
@@ -97,18 +93,14 @@ class TabularBayesianApproximation:
     self.B[:, :] = [1, 1, 1, 4]
 
   def update_stats(self, s, a, val=0.0): # the default of the new value is 0 for exploration bonuses
-    print("THe s and a", s, a)
-    index = s[0] * 10 + s[1]
-    print("Index", index)
-    mu, nu, alpha, beta = self.B[index, a, :]
+    mu, nu, alpha, beta = self.B[s, a, :]
     self.B[s, a, 0] = (nu * mu + val) / (nu + 1)
     self.B[s, a, 1] = nu + 1
     self.B[s, a, 2] = alpha + 1.0/2.0
     self.B[s, a, 3] = (nu / (nu + 1.0)) * math.pow((val - mu), 2.0) / 2.0
 
   def sample(self, s, a, n):
-    index = s[0] * 10 + s[1]
-    mu, nu, alpha, beta = self.B[index, a, :]
+    mu, nu, alpha, beta = self.B[s, a, :]
     variance = beta / ((alpha - 1.0) * nu)
     # don't add the mean here so we do not double count for the reward
     one_stdev = np.sqrt(variance)
@@ -116,25 +108,13 @@ class TabularBayesianApproximation:
 
 """####Q-learning Agent with Bonus updated Tabularly"""
 
-# class QEBValueFunction(Q):
-#   def __init__(self, num_states, num_acts):
-#     super().__init__(num_states, num_acts)
-#     self.B = TabularBayesianApproximation(num_states, num_acts)
-
-#   def update(self, s, sp, r, a, done):
-#     self.B.update_stats(s, a, 0)
-#     bonus = max(self.B.sample(s, a, 10))
-#     super().update(s, sp, r + bonus, a, done)
-
 class QRewardValueFunction(Q):
   def __init__(self, num_states, num_acts):
     super().__init__(num_states, num_acts)
     self.B = TabularBayesianApproximation(num_states, num_acts)
-    print("Size of b", type(self.B))
     self.epsilon = 0.01
 
   def update(self, s, sp, r, a, done):
-
     self.B.update_stats(s, a, r)
     bonus = max(self.B.sample(s, a, 10))
     super().update(s, sp, r + bonus, a, done)
@@ -142,38 +122,49 @@ class QRewardValueFunction(Q):
 def runExperiment(env, num_episodes, q):
   total_reward = 0
   rewards = []
+  steps = []
+
   for episode in range(num_episodes):
+    print(episode)
     s = env.reset()
     a = q.start(s)
-    limit = 10000
-    for step in range(limit):
+    done = False
+
+    step = 0
+
+    while not done:
       (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
-      done = done or step == (limit - 1)
       q.update(s, sp, r, a, done)
+
       s = sp # update the current state to sp
       a = q.getAction(s) # update the current action to a
 
       total_reward += r
       rewards.append(total_reward)
 
-  return rewards
+      step += 1
+
+    steps.append(step)
+
+  return (steps, rewards)
 
 
 def averageOverRuns(Agent, env, runs = 20):
   rewards = []
+  total_steps = []
   for run in range(runs):
     np.random.seed(run)
     random.seed(run)
 
-    agent = Agent(70, 4)
-    # env = Env()
+    agent = Agent(env.observationShape(), env.numActions())
 
-    r = runExperiment(env, 1, agent)
+    (steps, r) = runExperiment(env, 500, agent)
     rewards.append(r)
+    total_steps.append(steps)
 
-  np_rewards = np.array(rewards)
-  mean = np_rewards.mean(axis=0)
-  stderr = np_rewards.std(axis=0) / np.sqrt(runs)
+  metric = np.array(total_steps)
+  mean = metric.mean(axis=0)
+  stderr = metric.std(axis=0) / np.sqrt(runs)
 
   return (mean, stderr)
 
@@ -188,19 +179,17 @@ def plotRewards(ax, rewards, stderr, label):
 fig = plt.figure()
 ax = plt.axes()
 
-env = gym.make('WindyGridworld-v0')
-(rewards, stderr) = averageOverRuns(Optimal, env, 20)
-plotRewards(ax, rewards, stderr, 'Optimal')
+env = GridWorld([30, 30], 400)
 
+# Optimal for riverswim, doesn't make sense on gridworld
+# (rewards, stderr) = averageOverRuns(Optimal, env, 20)
+# plotRewards(ax, rewards, stderr, 'Optimal')
 
-# (rewards, stderr) = averageOverRuns(QRewardActionSelection, RiverSwim, 20)
-# plotRewards(ax, rewards, stderr, 'QReward action-selection')
-
-(rewards, stderr) = averageOverRuns(Q, env, 20)
+(rewards, stderr) = averageOverRuns(Q, env, 1)
 plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
-(rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 20)
-plotRewards(ax, rewards, stderr, 'QReward value-function')
+# (rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 20)
+# plotRewards(ax, rewards, stderr, 'QReward value-function')
 
 plt.legend()
 plt.show()
