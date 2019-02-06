@@ -125,7 +125,7 @@ def runExperiment(env, num_episodes, q):
   steps = []
 
   for episode in range(num_episodes):
-    print(episode)
+
     s = env.reset()
     a = q.start(s)
     done = False
@@ -193,6 +193,16 @@ plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
 plt.legend()
 plt.show()
+
+
+
+def parse_args():
+    parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")
+    # Environment
+    parser.add_argument("--environment", type=str, default="gridworld", help="environment")
+    parser.add_argument("--agent", type=str, default="Q", help="environment")
+
+    return parser.parse_args()
 
 # Notes:
 # windy gridworld -> stochastic world.. maybe ignore stochasticity at first

@@ -10,3 +10,8 @@ class Environment:
 
     def numActions(self):
         raise NotImplementedError()
+
+
+    def step(self):
+        step()
+        reward = self.reward_callback
