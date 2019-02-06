@@ -14,7 +14,7 @@ class RiverSwim(Environment):
     self.SNswimRightDown = 0.4
 
   def reset(self):
-      self.n = 0
+      self.steps = 0
       self.pos = 0
       return self.pos
 
