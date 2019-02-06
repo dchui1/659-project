@@ -12,6 +12,8 @@ import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from bayesianapproximator import *
+
 from environments.gridworld import GridWorld
 
 class Optimal:
@@ -29,6 +31,15 @@ class Optimal:
 
   def start(self, s):
     return 1
+
+
+# class Agent:
+#     def __init__(self):
+#         self.B = None
+#
+#     def start(self, obs):
+#         self.next_action = self.policy(obs)
+#         return self.next_action
 
 class Q:
   def __init__(self, num_states, num_acts):
@@ -70,9 +81,7 @@ class Q:
       self.next_action = self.policy(Sp)
       self.learn(S, Sp, r, a, self.gamma, max_bonus)
 
-  def start(self, obs):
-    self.next_action = self.policy(obs)
-    return self.next_action
+
 
   def breakTie(self, act_vals):
     indexes = np.where(act_vals == np.max(act_vals))[0]
@@ -83,41 +92,25 @@ class Q:
 
 """####Q-learning Agent with No Bonus"""
 
-class TabularBayesianApproximation:
-  def __init__(self, num_states, num_acts):
-    self.B = np.zeros(num_states + [num_acts, 4])
-    # prior sample mean
-    # prior "observations to make that mean"
-    # prior "observations to make our variance" # try to make it hard to reduce this
-    # prior sum of square errors (proportional to initial sample variance)
-    self.B[:, :] = [1, 1, 1, 4]
-
-  def update_stats(self, s, a, val=0.0): # the default of the new value is 0 for exploration bonuses
-    mu, nu, alpha, beta = self.B[s, a, :]
-    self.B[s, a, 0] = (nu * mu + val) / (nu + 1)
-    self.B[s, a, 1] = nu + 1
-    self.B[s, a, 2] = alpha + 1.0/2.0
-    self.B[s, a, 3] = (nu / (nu + 1.0)) * math.pow((val - mu), 2.0) / 2.0
-
-  def sample(self, s, a, n):
-    mu, nu, alpha, beta = self.B[s, a, :]
-    variance = beta / ((alpha - 1.0) * nu)
-    # don't add the mean here so we do not double count for the reward
-    one_stdev = np.sqrt(variance)
-    return [ one_stdev ]
 
 """####Q-learning Agent with Bonus updated Tabularly"""
 
 class QRewardValueFunction(Q):
-  def __init__(self, num_states, num_acts):
+
+  def __init__(self, num_states, num_acts, bayesianApproximator):
     super().__init__(num_states, num_acts)
-    self.B = TabularBayesianApproximation(num_states, num_acts)
+    self.bayesianApproximator = bayesianApproximator
     self.epsilon = 0.01
 
   def update(self, s, sp, r, a, done):
-    self.B.update_stats(s, a, r)
+    self.bayesianApproximator.update_stats(s, a, r)
     bonus = max(self.B.sample(s, a, 10))
     super().update(s, sp, r + bonus, a, done)
+
+  def start(self, obs):
+      self.next_action = self.policy(obs)
+      return self.next_action
+
 
 def runExperiment(env, num_episodes, q):
   total_reward = 0
@@ -155,8 +148,8 @@ def averageOverRuns(Agent, env, runs = 20):
   for run in range(runs):
     np.random.seed(run)
     random.seed(run)
-
-    agent = Agent(env.observationShape(), env.numActions())
+    bayesianApproximator = TabularBayesianApproximation(env.observationShape(), env.numActions())
+    agent = Agent(env.observationShape(), env.numActions(), bayesianApproximator)
 
     (steps, r) = runExperiment(env, 500, agent)
     rewards.append(r)
@@ -176,23 +169,24 @@ def plotRewards(ax, rewards, stderr, label):
   ax.plot(rewards, label=label)
   ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
 
-fig = plt.figure()
-ax = plt.axes()
+# fig = plt.figure()
+# ax = plt.axes()
 
+# def main():
 env = GridWorld([30, 30], 400)
 
 # Optimal for riverswim, doesn't make sense on gridworld
 # (rewards, stderr) = averageOverRuns(Optimal, env, 20)
 # plotRewards(ax, rewards, stderr, 'Optimal')
+#
+# (rewards, stderr) = averageOverRuns(Q, env, 1)
+# plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
-(rewards, stderr) = averageOverRuns(Q, env, 1)
-plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
-
-# (rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 20)
+(rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 20)
 # plotRewards(ax, rewards, stderr, 'QReward value-function')
 
-plt.legend()
-plt.show()
+# plt.legend()
+# plt.show()
 
 
 
@@ -201,6 +195,7 @@ def parse_args():
     # Environment
     parser.add_argument("--environment", type=str, default="gridworld", help="environment")
     parser.add_argument("--agent", type=str, default="Q", help="environment")
+
 
     return parser.parse_args()
 
