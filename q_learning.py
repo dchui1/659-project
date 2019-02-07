@@ -104,7 +104,7 @@ class QRewardValueFunction(Q):
 
   def update(self, s, sp, r, a, done):
     self.bayesianApproximator.update_stats(s, a, r)
-    bonus = max(self.B.sample(s, a, 10))
+    bonus = max(self.bayesianApproximator.sample(s, a, 10))
     super().update(s, sp, r + bonus, a, done)
 
   def start(self, obs):
@@ -150,10 +150,12 @@ def averageOverRuns(Agent, env, runs = 20):
     random.seed(run)
     bayesianApproximator = TabularBayesianApproximation(env.observationShape(), env.numActions())
     agent = Agent(env.observationShape(), env.numActions(), bayesianApproximator)
-
     (steps, r) = runExperiment(env, 500, agent)
     rewards.append(r)
     total_steps.append(steps)
+
+
+  print("Values of table afterwards: ",  bayesianApproximator.B)
 
   metric = np.array(total_steps)
   mean = metric.mean(axis=0)
@@ -182,7 +184,7 @@ env = GridWorld([30, 30], 400)
 # (rewards, stderr) = averageOverRuns(Q, env, 1)
 # plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
-(rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 20)
+(rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 1)
 # plotRewards(ax, rewards, stderr, 'QReward value-function')
 
 # plt.legend()

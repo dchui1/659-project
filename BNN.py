@@ -7,7 +7,7 @@ tf.set_random_seed(42)
 np.random.seed(42)
 # some the research2018 repo can be accessed from https://github.com/dmorrill10/research2018.git
 
-class KernelPrior(object):
+class KernelPrior:
     def __init__(self, stddev=1):
         self.stddev = stddev
 
