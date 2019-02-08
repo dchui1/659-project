@@ -108,7 +108,7 @@ class QRewardValueFunction(Q):
     samples = self.bayesianApproximator.sample(s, a, 10)
     print("Samples", samples)
 
-    bonus = max(samples) - np.mean(samples)
+    bonus = max([x[0] for x in samples]) - np.mean([x[0] for x in samples])
     super().update(s, sp, r + bonus, a, done)
 
   def start(self, obs):
@@ -179,7 +179,7 @@ def plotRewards(ax, rewards, stderr, label):
 # ax = plt.axes()
 
 # def main():
-env = GridWorld([30, 30], 400)
+env = GridWorld([5, 5], 400)
 
 # Optimal for riverswim, doesn't make sense on gridworld
 # (rewards, stderr) = averageOverRuns(Optimal, env, 20)
