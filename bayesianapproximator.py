@@ -5,7 +5,7 @@ class BayesianApproximator():
 
     def __init__(self, state_dimensions, num_acts):
 
-        self.dimensions = state_dimensions
+        self.dimensions = np.array(state_dimensions)
         self.num_actions = num_acts
     #     self.B = np.zeros(np.prod(state_dimensions) + [num_acts])
 
@@ -46,7 +46,7 @@ class TabularBayesianApproximation(BayesianApproximator):
     variance = beta / ((alpha - 1.0) * nu)
     # don't add the mean here so we do not double count for the reward
     one_stdev = np.sqrt(variance)
-    return [ one_stdev ]
+    return [ one_stdev ] * n
 
   def getIndex(self, s):
       i = sum([a*b for a,b in zip(s[:-1], s[:-1])]) -1 + s[-1]

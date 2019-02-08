@@ -13,6 +13,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from bayesianapproximator import *
+from BNNApproximation import BNNApproximation
 
 from environments.gridworld import GridWorld
 
@@ -104,7 +105,10 @@ class QRewardValueFunction(Q):
 
   def update(self, s, sp, r, a, done):
     self.bayesianApproximator.update_stats(s, a, r)
-    bonus = max(self.bayesianApproximator.sample(s, a, 10))
+    samples = self.bayesianApproximator.sample(s, a, 10)
+    print("Samples", samples)
+
+    bonus = max(samples) - np.mean(samples)
     super().update(s, sp, r + bonus, a, done)
 
   def start(self, obs):
@@ -148,7 +152,7 @@ def averageOverRuns(Agent, env, runs = 20):
   for run in range(runs):
     np.random.seed(run)
     random.seed(run)
-    bayesianApproximator = TabularBayesianApproximation(env.observationShape(), env.numActions())
+    bayesianApproximator = BNNApproximation(env.observationShape(), env.numActions())
     agent = Agent(env.observationShape(), env.numActions(), bayesianApproximator)
     (steps, r) = runExperiment(env, 500, agent)
     rewards.append(r)
