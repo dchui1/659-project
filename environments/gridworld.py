@@ -27,9 +27,9 @@ class GridWorld(Environment):
             self._y = bound(self._y -1, 0, self.shape[1] - 1)
 
         r = self.getReward()
+        self.steps += 1
         done = r == 1 or self.maxSteps == self.steps
 
-        self.steps += 1
 
         return (np.array([self._x, self._y]), r, done, action)
 
