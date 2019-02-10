@@ -8,6 +8,7 @@ Original file is located at
 
 ####Imports and Definitions
 """
+from functools import reduce
 import random
 import math
 import numpy as np
@@ -16,6 +17,8 @@ from bayesianapproximator import *
 from BNNApproximation import BNNApproximation
 
 from environments.gridworld import GridWorld
+
+product = lambda arr: reduce(lambda a, b: a * b, arr)
 
 class Optimal:
   def __init__(self, num_states, num_acts):
@@ -43,16 +46,20 @@ class Optimal:
 #         return self.next_action
 
 class Q:
-  def __init__(self, num_states, num_acts):
-    self.alpha = 0.01
-    self.gamma = 0.99
+  def __init__(self, state_shape, num_acts):
+    self.alpha = 0.5
+    self.gamma = 0.9
     self.epsilon = 0.1
 
-    self.num_states = num_states
+    self.state_shape = state_shape
+    self.num_states = product(state_shape)
     self.num_acts = num_acts
 
-    self.Q = np.zeros(self.num_states + [self.num_acts])
+    self.Q = np.zeros((self.num_states, self.num_acts))
     self.next_action = 0
+
+  def getIndex(self, s):
+    return np.ravel_multi_index(s, self.state_shape)
 
   def policy(self, S):
     if random.random() < self.epsilon:
@@ -60,7 +67,7 @@ class Q:
     return self.maxAction(S)
 
   def maxAction(self, s):
-    act_vals = self.Q[s, :]
+    act_vals = self.Q[self.getIndex(s), :]
     move = self.breakTie(act_vals)
     return move
 
@@ -70,10 +77,12 @@ class Q:
   # if gamma_tp1 = 0, that means the episode terminated
   def learn(self, s, sp, r, a, gamma, max_bonus=0):
     ap = self.maxAction(sp)
-    Q_p = self.Q[sp, ap]
+    Q_p = self.Q[self.getIndex(sp), ap]
 
-    tde = (r + max_bonus + gamma * Q_p) - self.Q[s, a]  # add a max_bonus i
-    self.Q[s, a] = self.Q[s, a] + self.alpha*tde
+    s_idx = self.getIndex(s)
+
+    tde = (r + max_bonus + gamma * Q_p) - self.Q[s_idx, a]  # add a max_bonus i
+    self.Q[s_idx, a] = self.Q[s_idx, a] + self.alpha*tde
 
   def update(self, S, Sp, r, a, done, max_bonus=0):
     if done:
@@ -101,7 +110,7 @@ class QRewardValueFunction(Q):
   def __init__(self, num_states, num_acts, bayesianApproximator):
     super().__init__(num_states, num_acts)
     self.bayesianApproximator = bayesianApproximator
-    self.epsilon = 0.01
+    self.epsilon = 0.05
 
   def update(self, s, sp, r, a, done):
     self.bayesianApproximator.update_stats(s, a, r)
@@ -122,7 +131,6 @@ def runExperiment(env, num_episodes, q):
   steps = []
 
   for episode in range(num_episodes):
-
     s = env.reset()
     a = q.start(s)
     done = False
@@ -142,6 +150,7 @@ def runExperiment(env, num_episodes, q):
       step += 1
 
     steps.append(step)
+    print(episode, step)
 
   return (steps, rewards)
 
@@ -154,7 +163,7 @@ def averageOverRuns(Agent, env, runs = 20):
     random.seed(run)
     bayesianApproximator = BNNApproximation(env.observationShape(), env.numActions())
     agent = Agent(env.observationShape(), env.numActions(), bayesianApproximator)
-    (steps, r) = runExperiment(env, 500, agent)
+    (steps, r) = runExperiment(env, 1000, agent)
     rewards.append(r)
     total_steps.append(steps)
 
@@ -188,8 +197,11 @@ env = GridWorld([5, 5], 400)
 # (rewards, stderr) = averageOverRuns(Q, env, 1)
 # plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
-(rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 1)
-# plotRewards(ax, rewards, stderr, 'QReward value-function')
+# (rewards, stderr) = averageOverRuns(Q, env, 1)
+# plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
+
+(rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 5)
+plotRewards(ax, rewards, stderr, 'QReward value-function')
 
 # plt.legend()
 # plt.show()
