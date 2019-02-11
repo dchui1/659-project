@@ -36,7 +36,7 @@ class BNNApproximation(BayesianApproximator):
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(tf.tables_initializer())
-            predictions = [sess.run(self.bnn(np.array([input, input], dtype=np.float32))) for i in range(n)]
+            predictions = [sess.run(self.bnn(np.array([input, input], dtype=np.float32)))[0] for i in range(n)]
             return predictions
 
     def convert_action(self, a):

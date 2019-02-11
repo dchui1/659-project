@@ -8,122 +8,22 @@ Original file is located at
 
 ####Imports and Definitions
 """
-from functools import reduce
 import random
 import math
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from bayesianapproximator import *
 from BNNApproximation import BNNApproximation
 
+# agents
+from agents.TabularQ import TabularQ
+from agents.TabularRTabularQ import TabularRTabularQ
+from agents.BnnRTabularQ import BnnRTabularQ
+from agents.RiverswimOptimal import Optimal
+
+# environments
 from environments.gridworld import GridWorld
-
-product = lambda arr: reduce(lambda a, b: a * b, arr)
-
-class Optimal:
-  def __init__(self, num_states, num_acts):
-    self.num_states = num_states
-    self.num_acts = num_acts
-
-  def policy(self, s):
-    return 1
-  def getAction(self, s):
-    return 1
-
-  def update(self, s, sp, r, a, done):
-    return None
-
-  def start(self, s):
-    return 1
-
-
-# class Agent:
-#     def __init__(self):
-#         self.B = None
-#
-#     def start(self, obs):
-#         self.next_action = self.policy(obs)
-#         return self.next_action
-
-class Q:
-  def __init__(self, state_shape, num_acts):
-    self.alpha = 0.5
-    self.gamma = 0.9
-    self.epsilon = 0.1
-
-    self.state_shape = state_shape
-    self.num_states = product(state_shape)
-    self.num_acts = num_acts
-
-    self.Q = np.zeros((self.num_states, self.num_acts))
-    self.next_action = 0
-
-  def getIndex(self, s):
-    return np.ravel_multi_index(s, self.state_shape)
-
-  def policy(self, S):
-    if random.random() < self.epsilon:
-      return random.randint(0, self.num_acts - 1)
-    return self.maxAction(S)
-
-  def maxAction(self, s):
-    act_vals = self.Q[self.getIndex(s), :]
-    move = self.breakTie(act_vals)
-    return move
-
-  def getAction(self, Obs):
-    return self.next_action
-
-  # if gamma_tp1 = 0, that means the episode terminated
-  def learn(self, s, sp, r, a, gamma, max_bonus=0):
-    ap = self.maxAction(sp)
-    Q_p = self.Q[self.getIndex(sp), ap]
-
-    s_idx = self.getIndex(s)
-
-    tde = (r + max_bonus + gamma * Q_p) - self.Q[s_idx, a]  # add a max_bonus i
-    self.Q[s_idx, a] = self.Q[s_idx, a] + self.alpha*tde
-
-  def update(self, S, Sp, r, a, done, max_bonus=0):
-    if done:
-      self.learn(S, Sp, r, a, 0) # If done, whould we give an exploration bonus?
-    else:
-      self.next_action = self.policy(Sp)
-      self.learn(S, Sp, r, a, self.gamma, max_bonus)
-
-
-
-  def breakTie(self, act_vals):
-    indexes = np.where(act_vals == np.max(act_vals))[0]
-    if len(indexes) < 1:
-      raise ArithmeticError()
-
-    return np.random.choice(indexes)
-
-"""####Q-learning Agent with No Bonus"""
-
-
-"""####Q-learning Agent with Bonus updated Tabularly"""
-
-class QRewardValueFunction(Q):
-
-  def __init__(self, num_states, num_acts, bayesianApproximator):
-    super().__init__(num_states, num_acts)
-    self.bayesianApproximator = bayesianApproximator
-    self.epsilon = 0.05
-
-  def update(self, s, sp, r, a, done):
-    self.bayesianApproximator.update_stats(s, a, r)
-    samples = self.bayesianApproximator.sample(s, a, 10)
-    print("Samples", samples)
-
-    bonus = max([x[0] for x in samples]) - np.mean([x[0] for x in samples])
-    super().update(s, sp, r + bonus, a, done)
-
-  def start(self, obs):
-      self.next_action = self.policy(obs)
-      return self.next_action
-
 
 def runExperiment(env, num_episodes, q):
   total_reward = 0
@@ -161,14 +61,10 @@ def averageOverRuns(Agent, env, runs = 20):
   for run in range(runs):
     np.random.seed(run)
     random.seed(run)
-    bayesianApproximator = BNNApproximation(env.observationShape(), env.numActions())
-    agent = Agent(env.observationShape(), env.numActions(), bayesianApproximator)
+    agent = Agent(env.observationShape(), env.numActions())
     (steps, r) = runExperiment(env, 1000, agent)
     rewards.append(r)
     total_steps.append(steps)
-
-
-  print("Values of table afterwards: ",  bayesianApproximator.B)
 
   metric = np.array(total_steps)
   mean = metric.mean(axis=0)
@@ -184,11 +80,11 @@ def plotRewards(ax, rewards, stderr, label):
   ax.plot(rewards, label=label)
   ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
 
-# fig = plt.figure()
-# ax = plt.axes()
+fig = plt.figure()
+ax = plt.axes()
 
 # def main():
-env = GridWorld([5, 5], 400)
+env = GridWorld([30, 30], 400)
 
 # Optimal for riverswim, doesn't make sense on gridworld
 # (rewards, stderr) = averageOverRuns(Optimal, env, 20)
@@ -200,11 +96,11 @@ env = GridWorld([5, 5], 400)
 # (rewards, stderr) = averageOverRuns(Q, env, 1)
 # plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
-(rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 5)
+(rewards, stderr) = averageOverRuns(TabularRTabularQ, env, 5)
 plotRewards(ax, rewards, stderr, 'QReward value-function')
 
-# plt.legend()
-# plt.show()
+plt.legend()
+plt.show()
 
 
 

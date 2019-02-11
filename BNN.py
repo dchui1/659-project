@@ -1,10 +1,6 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
-print(tf.__version__)
-sess = tf.InteractiveSession()
-tf.set_random_seed(42)
-np.random.seed(42)
 # some the research2018 repo can be accessed from https://github.com/dmorrill10/research2018.git
 
 class KernelPrior:
@@ -52,49 +48,54 @@ def new_bnn(log_divergence_weight=-10, prior_stddev=1, residual_weight=0.1):
             bias_divergence_fn=weighted_divergence_fn(log_divergence_weight))
     ])
 
-#training-data:
-x = np.array([[1., 2., 3.], [2., 3., 4.]], dtype=np.float32)
-y = np.array([1, 5], dtype=np.float32)
-# print("Shape of x", x.shape)
-y.shape[0]
+if __name__ == "__main__":
+    print(tf.__version__)
+    sess = tf.InteractiveSession()
+    tf.set_random_seed(42)
+    np.random.seed(42)
+    #training-data:
+    x = np.array([[1., 2., 3.], [2., 3., 4.]], dtype=np.float32)
+    y = np.array([1, 5], dtype=np.float32)
+    # print("Shape of x", x.shape)
+    y.shape[0]
 
-# run model
-f = new_bnn()
-f.compile(optimizer=tf.keras.optimizers.Adam(1e-2), loss=tf.losses.huber_loss)
-history = f.fit(x, y, batch_size=32, epochs=1000, verbose=1)#, class_weight=W)
-# print("history", history)
-#
-# print("Finished compiling")
-# print(type(f))
-# print(type(x))
+    # run model
+    f = new_bnn()
+    f.compile(optimizer=tf.keras.optimizers.Adam(1e-2), loss=tf.losses.huber_loss)
+    history = f.fit(x, y, batch_size=32, epochs=1000, verbose=1)#, class_weight=W)
+    # print("history", history)
+    #
+    # print("Finished compiling")
+    # print(type(f))
+    # print(type(x))
 
-# Evaluation:
-prediction_train = f(x)
-predictions_list_trainset = []
-for i in range(100):
-  y = sess.run(
-    prediction_train
-  )
-  predictions_list_trainset.append(y)
+    # Evaluation:
+    prediction_train = f(x)
+    predictions_list_trainset = []
+    for i in range(100):
+        y = sess.run(
+            prediction_train
+        )
+        predictions_list_trainset.append(y)
 
-predictions_list_trainset = np.asarray(predictions_list_trainset)
+    predictions_list_trainset = np.asarray(predictions_list_trainset)
 
-print("Predictions shape", predictions_list_trainset.shape)
-print("Predictions mean", predictions_list_trainset.mean())
-print("Predictions shape", predictions_list_trainset.std(0, ddof=1))
+    print("Predictions shape", predictions_list_trainset.shape)
+    print("Predictions mean", predictions_list_trainset.mean())
+    print("Predictions shape", predictions_list_trainset.std(0, ddof=1))
 
-#test-data:
-X_test = np.array([[45., 10., 10.], [500., 676., 2000.]], dtype=np.float32)
+    #test-data:
+    X_test = np.array([[45., 10., 10.], [500., 676., 2000.]], dtype=np.float32)
 
-prediction_test = f(X_test)
-predictions_list_testset = []
-for i in range(100):
-  x = sess.run(
-   prediction_test
-  )
-  predictions_list_testset.append(x)
-predictions_list_testset = np.asarray(predictions_list_testset)
-print("Predictions")
-print(predictions_list_testset.shape)
-print((predictions_list_testset.mean(0)).mean())
-print((predictions_list_testset.std(0, ddof=1)).mean())
+    prediction_test = f(X_test)
+    predictions_list_testset = []
+    for i in range(100):
+        x = sess.run(
+        prediction_test
+        )
+        predictions_list_testset.append(x)
+    predictions_list_testset = np.asarray(predictions_list_testset)
+    print("Predictions")
+    print(predictions_list_testset.shape)
+    print((predictions_list_testset.mean(0)).mean())
+    print((predictions_list_testset.std(0, ddof=1)).mean())
