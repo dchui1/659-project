@@ -24,7 +24,7 @@ class BNNApproximation(BayesianApproximator):
         input = np.concatenate((s, self.convert_action(a)))
         print(input.shape)
 
-        self.bnn.fit(np.array([input, input]), np.array([val, val]), batch_size=32, epochs=100, verbose=1)
+        self.bnn.fit(np.array([[input]]), np.array([[val]]), batch_size=32, epochs=100, verbose=1)
 
 
     def sample(self, s, a, n):
