@@ -13,6 +13,9 @@ import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from bayesianapproximator import *
+from BNNApproximation import BNNApproximation
+
 from environments.gridworld import GridWorld
 
 product = lambda arr: reduce(lambda a, b: a * b, arr)
@@ -32,6 +35,15 @@ class Optimal:
 
   def start(self, s):
     return 1
+
+
+# class Agent:
+#     def __init__(self):
+#         self.B = None
+#
+#     def start(self, obs):
+#         self.next_action = self.policy(obs)
+#         return self.next_action
 
 class Q:
   def __init__(self, state_shape, num_acts):
@@ -79,9 +91,7 @@ class Q:
       self.next_action = self.policy(Sp)
       self.learn(S, Sp, r, a, self.gamma, max_bonus)
 
-  def start(self, obs):
-    self.next_action = self.policy(obs)
-    return self.next_action
+
 
   def breakTie(self, act_vals):
     indexes = np.where(act_vals == np.max(act_vals))[0]
@@ -92,48 +102,28 @@ class Q:
 
 """####Q-learning Agent with No Bonus"""
 
-class TabularBayesianApproximation:
-  def __init__(self, state_shape, num_acts):
-    self.num_states = product(state_shape)
-    self.state_shape = state_shape
-    self.B = np.zeros((self.num_states, num_acts, 4))
-    # prior sample mean
-    # prior "observations to make that mean"
-    # prior "observations to make our variance" # try to make it hard to reduce this
-    # prior sum of square errors (proportional to initial sample variance)
-    self.B[:, :] = [1, 1, 2, 1]
-
-  def getIndex(self, s):
-    return np.ravel_multi_index(s, self.state_shape)
-
-  def update_stats(self, s, a, val=0.0): # the default of the new value is 0 for exploration bonuses
-    s_idx = self.getIndex(s)
-    mu, nu, alpha, beta = self.B[s_idx, a, :]
-    self.B[s_idx, a, 0] = (nu * mu + val) / (nu + 1)
-    self.B[s_idx, a, 1] = nu + 1
-    self.B[s_idx, a, 2] = alpha + 1.0/2.0
-    self.B[s_idx, a, 3] = (nu / (nu + 1.0)) * math.pow((val - mu), 2.0) / 2.0
-
-  def sample(self, s, a, n):
-    s_idx = self.getIndex(s)
-    mu, nu, alpha, beta = self.B[s_idx, a, :]
-    variance = beta / ((alpha - 1.0) * nu)
-    # don't add the mean here so we do not double count for the reward
-    one_stdev = np.sqrt(variance)
-    return [ one_stdev ]
 
 """####Q-learning Agent with Bonus updated Tabularly"""
 
 class QRewardValueFunction(Q):
-  def __init__(self, num_states, num_acts):
+
+  def __init__(self, num_states, num_acts, bayesianApproximator):
     super().__init__(num_states, num_acts)
-    self.B = TabularBayesianApproximation(num_states, num_acts)
+    self.bayesianApproximator = bayesianApproximator
     self.epsilon = 0.05
 
   def update(self, s, sp, r, a, done):
-    self.B.update_stats(s, a, r)
-    bonus = max(self.B.sample(s, a, 10))
+    self.bayesianApproximator.update_stats(s, a, r)
+    samples = self.bayesianApproximator.sample(s, a, 10)
+    print("Samples", samples)
+
+    bonus = max([x[0] for x in samples]) - np.mean([x[0] for x in samples])
     super().update(s, sp, r + bonus, a, done)
+
+  def start(self, obs):
+      self.next_action = self.policy(obs)
+      return self.next_action
+
 
 def runExperiment(env, num_episodes, q):
   total_reward = 0
@@ -171,17 +161,14 @@ def averageOverRuns(Agent, env, runs = 20):
   for run in range(runs):
     np.random.seed(run)
     random.seed(run)
-
-    agent = Agent(env.observationShape(), env.numActions())
-
+    bayesianApproximator = BNNApproximation(env.observationShape(), env.numActions())
+    agent = Agent(env.observationShape(), env.numActions(), bayesianApproximator)
     (steps, r) = runExperiment(env, 1000, agent)
     rewards.append(r)
     total_steps.append(steps)
 
-  # mean_value = np.mean(agent.Q, 1).reshape(30, 30)
-  # plt.imshow(mean_value, cmap='hot', interpolation='nearest')
-  # plt.gca().invert_yaxis()
-  # plt.show()
+
+  print("Values of table afterwards: ",  bayesianApproximator.B)
 
   metric = np.array(total_steps)
   mean = metric.mean(axis=0)
@@ -197,14 +184,18 @@ def plotRewards(ax, rewards, stderr, label):
   ax.plot(rewards, label=label)
   ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
 
-fig = plt.figure()
-ax = plt.axes()
+# fig = plt.figure()
+# ax = plt.axes()
 
-env = GridWorld([30, 30], 400)
+# def main():
+env = GridWorld([5, 5], 400)
 
 # Optimal for riverswim, doesn't make sense on gridworld
 # (rewards, stderr) = averageOverRuns(Optimal, env, 20)
 # plotRewards(ax, rewards, stderr, 'Optimal')
+#
+# (rewards, stderr) = averageOverRuns(Q, env, 1)
+# plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
 # (rewards, stderr) = averageOverRuns(Q, env, 1)
 # plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
@@ -212,8 +203,19 @@ env = GridWorld([30, 30], 400)
 (rewards, stderr) = averageOverRuns(QRewardValueFunction, env, 5)
 plotRewards(ax, rewards, stderr, 'QReward value-function')
 
-plt.legend()
-plt.show()
+# plt.legend()
+# plt.show()
+
+
+
+def parse_args():
+    parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")
+    # Environment
+    parser.add_argument("--environment", type=str, default="gridworld", help="environment")
+    parser.add_argument("--agent", type=str, default="Q", help="environment")
+
+
+    return parser.parse_args()
 
 # Notes:
 # windy gridworld -> stochastic world.. maybe ignore stochasticity at first
