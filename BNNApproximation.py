@@ -31,16 +31,13 @@ class BNNApproximation(BayesianApproximator):
         if self.dimensions.shape != s.shape or not a <= self.num_actions:
             raise ValueError("Invalid value to sample", s, a)
 
-        input = np.concatenate((s, self.convert_action(a)))
+        input_vector = np.concatenate((s, self.convert_action(a)))
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(tf.tables_initializer())
-<<<<<<< Updated upstream
-            predictions = [sess.run(self.bnn(np.array([input, input], dtype=np.float32)))[0] for i in range(n)]
-=======
-            predictions = [sess.run(self.bnn(np.array([[input]], dtype=np.float32))) for i in range(n)]
->>>>>>> Stashed changes
+            sample_fn = self.bnn(np.array([[input_vector]], dtype=np.float32))
+            predictions = [sess.run(sample_fn) for i in range(n)]
             return predictions
 
     def convert_action(self, a):
