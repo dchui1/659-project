@@ -18,6 +18,7 @@ from BNNApproximation import BNNApproximation
 
 # agents
 from agents.TabularQ import TabularQ
+from agents.LinearQ import LinearQ
 from agents.TabularRTabularQ import TabularRTabularQ
 from agents.BnnRTabularQ import BnnRTabularQ
 from agents.RiverswimOptimal import Optimal
@@ -50,12 +51,12 @@ def runExperiment(env, num_episodes, agent):
 
       step += 1
 
-      for a in range(env.numActions()):
-          plt.imshow(agent.rewardApprox.action_var[a].reshape((30, 30)), cmap='hot', vmin=0.0, vmax=0.1)
-          plt.savefig(f'figs/heat_map.{step}.{a}.png')
+      # for a in range(env.numActions()):
+      #     plt.imshow(agent.rewardApprox.action_var[a].reshape((30, 30)), cmap='hot', vmin=0.0, vmax=0.1)
+      #     plt.savefig(f'figs/heat_map.{step}.{a}.png')
 
     steps.append(step)
-    print(episode, step)
+    # print(episode, step)
 
   return (steps, rewards)
 
@@ -70,6 +71,7 @@ def averageOverRuns(Agent, env, runs = 20):
     (steps, r) = runExperiment(env, 1, agent)
     rewards.append(r)
     total_steps.append(steps)
+    print('------')
 
   metric = np.array(total_steps)
   mean = metric.mean(axis=0)
@@ -89,7 +91,7 @@ fig = plt.figure()
 ax = plt.axes()
 
 # def main():
-env = GridWorld([30, 30], 20)
+env = GridWorld([30, 30], 10)
 
 # Optimal for riverswim, doesn't make sense on gridworld
 # (rewards, stderr) = averageOverRuns(Optimal, env, 20)
@@ -98,14 +100,17 @@ env = GridWorld([30, 30], 20)
 # (rewards, stderr) = averageOverRuns(Q, env, 1)
 # plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
-# (rewards, stderr) = averageOverRuns(TabularQ, env, 5)
-# plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
+(rewards, stderr) = averageOverRuns(TabularQ, env, 1)
+plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 #
 # (rewards, stderr) = averageOverRuns(UCB, env, 5)
 # plotRewards(ax, rewards, stderr, 'UCB')
 
-(rewards, stderr) = averageOverRuns(TabularRTabularQ, env, 1)
-plotRewards(ax, rewards, stderr, 'QReward value-function')
+(rewards, stderr) = averageOverRuns(LinearQ, env, 1)
+plotRewards(ax, rewards, stderr, 'Linear-Q')
+
+# (rewards, stderr) = averageOverRuns(TabularRTabularQ, env, 1)
+# plotRewards(ax, rewards, stderr, 'QReward value-function')
 
 plt.legend()
 plt.title("Average Number of Steps to Reach Goal across 5 Runs")
