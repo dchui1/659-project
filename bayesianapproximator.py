@@ -1,5 +1,8 @@
 import numpy as np
 import math
+import scipy
+from scipy.stats import t
+import matplotlib.pyplot as plt
 
 class BayesianApproximator():
 
@@ -36,10 +39,17 @@ class TabularBayesianApproximation(BayesianApproximator):
     self.B[s_idx, a, 2] = alpha + 1.0/2.0
     self.B[s_idx, a, 3] = (nu / (nu + 1.0)) * math.pow((val - mu), 2.0) / 2.0
 
-  def sample(self, s, a, n):
+  def sample(self, s, a, n, use_stddev=False):
     s_idx = self.getIndex(s)
     mu, nu, alpha, beta = self.B[s_idx, a, :]
-    variance = beta / ((alpha - 1.0) * nu)
-    # don't add the mean here so we do not double count for the reward
-    one_stdev = np.sqrt(variance)
-    return [ one_stdev ]
+    scale = beta * (nu + 1)/(alpha * nu)
+    df = 2 * alpha
+    r = t.rvs(df=df, loc=mu, scale=scale, size=1000)
+    bonus = max(r) - np.average(r)
+    if use_stddev:
+        mean, var, skew, kurt = t.stats(df=df, loc=mu, scale=scale, moments='mvsk')
+        variance = beta / ((alpha - 1.0) * nu) # we could use calculated "variance", or "var"
+        # don't add the mean here so we do not double count for the reward
+        one_stdev = np.sqrt(variance)
+        return [one_stdev]
+    return bonus
