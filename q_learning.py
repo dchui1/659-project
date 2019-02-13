@@ -26,29 +26,33 @@ from agents.UCB import UCB
 # environments
 from environments.gridworld import GridWorld
 
-def runExperiment(env, num_episodes, q):
+def runExperiment(env, num_episodes, agent):
   total_reward = 0
   rewards = []
   steps = []
 
   for episode in range(num_episodes):
     s = env.reset()
-    a = q.start(s)
+    a = agent.start(s)
     done = False
 
     step = 0
 
     while not done:
       (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
-      q.update(s, sp, r, a, done)
+      agent.update(s, sp, r, a, done)
 
       s = sp # update the current state to sp
-      a = q.getAction(s) # update the current action to a
+      a = agent.getAction(s) # update the current action to a
 
       total_reward += r
       rewards.append(total_reward)
 
       step += 1
+
+      for a in range(env.numActions()):
+          plt.imshow(agent.rewardApprox.action_var[a].reshape((30, 30)), cmap='hot', vmin=0.0, vmax=0.1)
+          plt.savefig(f'figs/heat_map.{step}.{a}.png')
 
     steps.append(step)
     print(episode, step)
@@ -63,7 +67,7 @@ def averageOverRuns(Agent, env, runs = 20):
     np.random.seed(run)
     random.seed(run)
     agent = Agent(env.observationShape(), env.numActions())
-    (steps, r) = runExperiment(env, 1000, agent)
+    (steps, r) = runExperiment(env, 1, agent)
     rewards.append(r)
     total_steps.append(steps)
 
@@ -85,7 +89,7 @@ fig = plt.figure()
 ax = plt.axes()
 
 # def main():
-env = GridWorld([30, 30], 700)
+env = GridWorld([30, 30], 20)
 
 # Optimal for riverswim, doesn't make sense on gridworld
 # (rewards, stderr) = averageOverRuns(Optimal, env, 20)
@@ -94,16 +98,19 @@ env = GridWorld([30, 30], 700)
 # (rewards, stderr) = averageOverRuns(Q, env, 1)
 # plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
-# (rewards, stderr) = averageOverRuns(Q, env, 1)
+# (rewards, stderr) = averageOverRuns(TabularQ, env, 5)
 # plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
+#
+# (rewards, stderr) = averageOverRuns(UCB, env, 5)
+# plotRewards(ax, rewards, stderr, 'UCB')
 
-(rewards, stderr) = averageOverRuns(UCB, env, 5)
-plotRewards(ax, rewards, stderr, 'UCB')
-
-(rewards, stderr) = averageOverRuns(TabularRTabularQ, env, 5)
+(rewards, stderr) = averageOverRuns(TabularRTabularQ, env, 1)
 plotRewards(ax, rewards, stderr, 'QReward value-function')
 
 plt.legend()
+plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+plt.xlabel("Number of Episodes")
+plt.ylabel("Average Number of Steps to Reach Goal")
 plt.show()
 
 
