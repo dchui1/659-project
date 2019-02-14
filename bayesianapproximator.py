@@ -19,14 +19,16 @@ class BayesianApproximator():
 
 class TabularBayesianApproximation(BayesianApproximator):
   def __init__(self, state_dimensions, num_acts):
-    num_states = np.prod(state_dimensions)
-    self.state_shape = state_dimensions
-    self.B = np.zeros((num_states, num_acts, 4))
-    # prior sample mean
-    # prior "observations to make that mean"
-    # prior "observations to make our variance" # try to make it hard to reduce this
-    # prior sum of square errors (proportional to initial sample variance)
-    self.B[:, :] = [1, 1, 2, 1]
+        super().__init__(state_dimensions, num_acts)
+        num_states = np.prod(state_dimensions)
+        self.state_shape = state_dimensions
+        self.B = np.zeros((num_states, num_acts, 4))
+        # prior sample mean
+        # prior "observations to make that mean"
+        # prior "observations to make our variance" # try to make it hard to reduce this
+        # prior sum of square errors (proportional to initial sample variance)
+        self.B[:, :] = [1, 1, 2, 1]
+        self.action_var = [np.zeros(num_states)] * num_acts
 
   def getIndex(self, s):
     return np.ravel_multi_index(s, self.state_shape)
@@ -45,11 +47,14 @@ class TabularBayesianApproximation(BayesianApproximator):
     scale = beta * (nu + 1)/(alpha * nu)
     df = 2 * alpha
     r = t.rvs(df=df, loc=mu, scale=scale, size=1000)
-    bonus = max(r) - np.average(r)
+    bonus = max(np.append(r, 0.0)) - np.average(r)
+    mean, var, skew, kurt = t.stats(df=df, loc=mu, scale=scale, moments='mvsk')
+    print(var)
+    self.action_var[a][s_idx] = var
+    # maybe we could check that the variance is -> 0 for each (s, a)
     if use_stddev:
-        mean, var, skew, kurt = t.stats(df=df, loc=mu, scale=scale, moments='mvsk')
         variance = beta / ((alpha - 1.0) * nu) # we could use calculated "variance", or "var"
         # don't add the mean here so we do not double count for the reward
         one_stdev = np.sqrt(variance)
         return [one_stdev]
-    return bonus
+    return [bonus]
