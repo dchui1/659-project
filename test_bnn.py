@@ -11,8 +11,7 @@ def test_bnn():
     [bnnApproximation.update_stats(np.array([1, 1]), 3, val=x) for x in values]
     samples = np.asarray(bnnApproximation.sample(np.array([1, 1]), 3, 100))
     print("Samples mean", samples.mean())
-    print("Samples std dev", samples.std())
-
+    print("Samples std dev", samples.std(0, ddof=1))
 
 
 def main():

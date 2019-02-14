@@ -7,7 +7,7 @@ class BNNApproximation(BayesianApproximator):
 
     def __init__(self, state_dimensions, num_acts):
         super().__init__(state_dimensions, num_acts)
-
+        self.session = tf.InteractiveSession()
         self.bnn = new_bnn()
         #TODO refactor this back out into the BNN method
         self.bnn.compile(optimizer=tf.keras.optimizers.Adam(1e-2),
@@ -33,12 +33,12 @@ class BNNApproximation(BayesianApproximator):
 
         input_vector = np.concatenate((s, self.convert_action(a)))
 
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            sess.run(tf.tables_initializer())
-            sample_fn = self.bnn(np.array([[input_vector]], dtype=np.float32))
-            predictions = [sess.run(sample_fn) for i in range(n)]
-            return predictions
+        # with self.session as sess:
+            # sess.run(tf.global_variables_initializer())
+            # sess.run(tf.tables_initializer())
+        sample_fn = self.bnn(np.array([[input_vector]], dtype=np.float32))
+        predictions = [self.session.run(sample_fn) for i in range(n)]
+        return predictions
 
     def convert_action(self, a):
         arr = np.zeros(self.num_actions)
