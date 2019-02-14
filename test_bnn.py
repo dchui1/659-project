@@ -1,5 +1,5 @@
 import numpy as np
-from BNNApproximation import BNNApproximation
+from BNNApproximation import *
 
 def test_bnn():
     bnnApproximation = BNNApproximation(np.array([10, 10]), 4)
@@ -11,7 +11,11 @@ def test_bnn():
     [bnnApproximation.update_stats(np.array([1, 1]), 3, val=x) for x in values]
     samples = np.asarray(bnnApproximation.sample(np.array([1, 1]), 3, 100))
     print("Samples mean", samples.mean())
-    print("Samples std dev", samples.std(0, ddof=1))
+    print("Samples std dev", samples.std())
+    new_samples = np.asarray(bnnApproximation.sample(np.array([10, 10]), 1, 100))
+    print("New Samples mean", new_samples.mean())
+    print("New Samples std dev", new_samples.std())
+
 
 
 def main():
