@@ -17,14 +17,14 @@ class BNNApproximation(BayesianApproximator):
         #     epochs=1000, verbose=1)
 
 
-    def update_stats(self, s, a, val=0.0):
+    def update_stats(self, s, a, val=0.0, batch_size = 32, epochs = 100):
         if self.dimensions.shape != s.shape or not a <= self.num_actions:
-
             raise ValueError("Invalid value to update stats", s, a, val)
-        input = np.concatenate((s, self.convert_action(a)))
-        print(input.shape)
 
-        self.bnn.fit(np.array([[input]]), np.array([[val]]), batch_size=32, epochs=100, verbose=1)
+        input_vector = np.concatenate((s, self.convert_action(a)))
+        print(input_vector.shape)
+
+        self.bnn.fit(np.array([[input_vector]]), np.array([[val]]), batch_size=batch_size, epochs=epochs)
 
 
     def sample(self, s, a, n):
