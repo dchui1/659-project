@@ -3,27 +3,31 @@ import math
 from agents.Agent import Agent
 from utils.math import argMax
 from utils.TileCoding import TileCoding
+from utils.sparse import SparseTC
 
 class LinearQ(Agent):
     def __init__(self, state_shape, num_acts):
-        self.alpha = 0.5
-        self.gamma = 0.9
+        self.tiles = 2
+        self.tilings = 8
         self.epsilon = 0.1
-        self.tiles = 30
-        self.tilings = 1
+        self.gamma = 0.9
+        self.alpha = 0.1 / float(self.tilings)
 
         self.state_shape = state_shape
         self.num_states = np.prod(state_shape)
         self.num_acts = num_acts
-        self.size = int(math.pow(self.tiles, len(state_shape)) * self.tilings * self.num_acts)
 
-        self.t = TileCoding(len(self.state_shape), self.tilings, self.tiles, self.num_acts)
+        self.tc = SparseTC({
+            'tiles': self.tiles,
+            'tilings': self.tilings,
+            'dims': len(state_shape),
+            'actions': num_acts,
+        })
+
+        self.size = self.tc.features()
 
         self.w = np.zeros((self.size))
         self.next_action = 0
-
-    def getIndex(self, s):
-        return np.ravel_multi_index(s, self.state_shape)
 
     def policy(self, S):
         if np.random.random() < self.epsilon:
@@ -31,7 +35,7 @@ class LinearQ(Agent):
         return self.maxAction(S)
 
     def maxAction(self, s):
-        act_vals = [self.w[self.t.get_index(s/29, a)[0]] for a in range(self.num_acts)]
+        act_vals = [self.tc.representation(s, a).dot(self.w) for a in range(self.num_acts)]
         move = argMax(act_vals)
         return move
 
@@ -46,13 +50,11 @@ class LinearQ(Agent):
     def learn(self, s, sp, r, a, gamma):
         ap = self.maxAction(sp)
 
-        Q_p = self.w[self.t.get_index(sp/29, ap)[0]]
+        Q_p = self.tc.representation(sp, ap).dot(self.w)
 
-        s_idx = self.t.get_index(s/29, a)[0]
-        x = np.zeros((self.size))
-        x[s_idx] = 1
-
-        tde = (r + gamma * Q_p) - self.w[s_idx]  # add a max_bonus i
+        x = self.tc.representation(s, a)
+        Q = x.dot(self.w)
+        tde = (r + gamma * Q_p) - Q  # add a max_bonus i
         self.w = self.w + self.alpha*tde*x
 
     def update(self, S, Sp, r, a, done):
@@ -63,4 +65,4 @@ class LinearQ(Agent):
             self.learn(S, Sp, r, a, self.gamma)
 
     def print(self):
-        print(self.w.reshape((900, 4)))
+        print(self.w)
