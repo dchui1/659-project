@@ -41,7 +41,6 @@ class TabularQ(Agent):
         Q_p = self.Q[self.getIndex(sp), ap]
 
         s_idx = self.getIndex(s)
-        print(s, a, s_idx + (900 * a))
 
         tde = (r + gamma * Q_p) - self.Q[s_idx, a]  # add a max_bonus i
         self.Q[s_idx, a] = self.Q[s_idx, a] + self.alpha*tde

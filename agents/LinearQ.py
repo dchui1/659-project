@@ -49,7 +49,6 @@ class LinearQ(Agent):
         Q_p = self.w[self.t.get_index(sp/29, ap)[0]]
 
         s_idx = self.t.get_index(s/29, a)[0]
-        print(s, a, s_idx)
         x = np.zeros((self.size))
         x[s_idx] = 1
 

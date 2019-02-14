@@ -14,12 +14,9 @@ class TileCoding:
         assert len(pos) == self.dim
         index = np.zeros((self.num_tiling))
         for ntl in range(self.num_tiling):
-            ind = 1
+            ind = 0
             for d in range(self.dim):
-                if pos[d] != 1.0:
-                    ind += (pos[d] - self.tiling_dist * ntl) // self.len_tile * self.num_tile**d
-                else:
-                    ind += (pos[d] - self.tiling_dist * ntl) // self.len_tile * self.num_tile**d - 1
+                ind += ((pos[d] - self.tiling_dist * ntl) + 1e-12) // self.len_tile * self.num_tile**d
             index[ntl] = ind + self.tile_one_tiling * ntl
         if action != None:
             index += action * self.tile_one_tiling * self.num_tiling

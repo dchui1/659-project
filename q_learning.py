@@ -56,7 +56,7 @@ def runExperiment(env, num_episodes, agent):
       #     plt.savefig(f'figs/heat_map.{step}.{a}.png')
 
     steps.append(step)
-    # print(episode, step)
+    print(episode, step)
 
   return (steps, rewards)
 
@@ -68,10 +68,9 @@ def averageOverRuns(Agent, env, runs = 20):
     np.random.seed(run)
     random.seed(run)
     agent = Agent(env.observationShape(), env.numActions())
-    (steps, r) = runExperiment(env, 1, agent)
+    (steps, r) = runExperiment(env, 1000, agent)
     rewards.append(r)
     total_steps.append(steps)
-    print('------')
 
   metric = np.array(total_steps)
   mean = metric.mean(axis=0)
@@ -91,7 +90,7 @@ fig = plt.figure()
 ax = plt.axes()
 
 # def main():
-env = GridWorld([30, 30], 10)
+env = GridWorld([30, 30], 700)
 
 # Optimal for riverswim, doesn't make sense on gridworld
 # (rewards, stderr) = averageOverRuns(Optimal, env, 20)
@@ -125,7 +124,7 @@ def parse_args():
     # Environment
     parser.add_argument("--environment", type=str, default="gridworld", help="environment")
     parser.add_argument("--agent", type=str, default="Q", help="environment")
-    
+
 
 
     return parser.parse_args()
