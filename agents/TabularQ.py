@@ -3,10 +3,10 @@ from agents.Agent import Agent
 from utils.math import argMax
 
 class TabularQ(Agent):
-    def __init__(self, state_shape, num_acts):
-        self.alpha = 0.5
-        self.gamma = 0.9
-        self.epsilon = 0.1
+    def __init__(self, state_shape, num_acts, params):
+        self.alpha = params['alpha']
+        self.gamma = params['gamma']
+        self.epsilon = params['epsilon']
 
         self.state_shape = state_shape
         self.num_states = np.prod(state_shape)

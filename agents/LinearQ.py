@@ -6,12 +6,12 @@ from utils.TileCoding import TileCoding
 from utils.sparse import SparseTC
 
 class LinearQ(Agent):
-    def __init__(self, state_shape, num_acts):
-        self.tiles = 2
-        self.tilings = 8
-        self.epsilon = 0.1
-        self.gamma = 0.9
-        self.alpha = 0.1 / float(self.tilings)
+    def __init__(self, state_shape, num_acts, params):
+        self.tiles = params['tiles']
+        self.tilings = params['tilings']
+        self.epsilon = params['epsilon']
+        self.gamma = params['gamma']
+        self.alpha = params['alpha'] / float(self.tilings)
 
         self.state_shape = state_shape
         self.num_states = np.prod(state_shape)

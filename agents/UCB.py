@@ -3,10 +3,9 @@ from agents.TabularQ import TabularQ
 from bayesianapproximator import TabularBayesianApproximation
 
 class UCB(TabularQ):
-    def __init__(self, state_shape, num_acts):
-        super().__init__(state_shape, num_acts)
-        self.epsilon = 0.05
-        self.c = 0.01
+    def __init__(self, state_shape, num_acts, params):
+        super().__init__(state_shape, num_acts, params)
+        self.c = params['c']
 
         self.N = np.zeros((np.prod(state_shape), num_acts))
         self.steps = 0
