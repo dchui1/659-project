@@ -4,5 +4,7 @@ __pycache__
 *#
 *~
 *.pyc
+lib/
+sparse/build
 
 figs/

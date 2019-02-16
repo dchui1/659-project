@@ -26,6 +26,7 @@ from agents.UCB import UCB
 
 # environments
 from environments.gridworld import GridWorld
+from environments.ContinuousGridworld import CtsGridWorld
 
 def runExperiment(env, num_episodes, agent):
   total_reward = 0
@@ -57,6 +58,7 @@ def runExperiment(env, num_episodes, agent):
 
     steps.append(step)
     print(episode, step)
+    # agent.print()
 
   return (steps, rewards)
 
@@ -90,7 +92,8 @@ fig = plt.figure()
 ax = plt.axes()
 
 # def main():
-env = GridWorld([30, 30], 700)
+# env = GridWorld([30, 30], 700)
+env = CtsGridWorld(400)
 
 # Optimal for riverswim, doesn't make sense on gridworld
 # (rewards, stderr) = averageOverRuns(Optimal, env, 20)
@@ -99,8 +102,8 @@ env = GridWorld([30, 30], 700)
 # (rewards, stderr) = averageOverRuns(Q, env, 1)
 # plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 
-(rewards, stderr) = averageOverRuns(TabularQ, env, 1)
-plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
+# (rewards, stderr) = averageOverRuns(TabularQ, env, 1)
+# plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
 #
 # (rewards, stderr) = averageOverRuns(UCB, env, 5)
 # plotRewards(ax, rewards, stderr, 'UCB')
