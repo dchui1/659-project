@@ -49,7 +49,6 @@ class TabularBayesianApproximation(BayesianApproximator):
     r = t.rvs(df=df, loc=mu, scale=scale, size=1000)
     bonus = max(np.append(r, 0.0)) - np.average(r)
     mean, var, skew, kurt = t.stats(df=df, loc=mu, scale=scale, moments='mvsk')
-    print(var)
     self.action_var[a][s_idx] = var
     # maybe we could check that the variance is -> 0 for each (s, a)
     if use_stddev:

@@ -7,9 +7,9 @@ class GridWorld(Environment):
 
     steps = 0
 
-    def __init__(self, shape, maxSteps):
-        self.shape = shape
-        self.maxSteps = maxSteps
+    def __init__(self, params):
+        self.shape = params['shape']
+        self.maxSteps = params['steps']
 
     def getReward(self):
         if self._x == self.shape[0] - 1 and self._y == self.shape[1] - 1:
