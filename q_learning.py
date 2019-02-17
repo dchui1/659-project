@@ -11,22 +11,13 @@ Original file is located at
 import random
 import math
 import argparse
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from bayesianapproximator import *
 from BNNApproximation import BNNApproximation
-
-# agents
-from agents.TabularQ import TabularQ
-from agents.LinearQ import LinearQ
-from agents.TabularRTabularQ import TabularRTabularQ
-from agents.BnnRTabularQ import BnnRTabularQ
-from agents.RiverswimOptimal import Optimal
-from agents.UCB import UCB
-
-# environments
-from environments.gridworld import GridWorld
-from environments.ContinuousGridworld import CtsGridWorld
+from ExperimentDescription import ExperimentDescription
+import utils.registry as registry
 
 def runExperiment(env, num_episodes, agent):
   total_reward = 0
@@ -63,20 +54,21 @@ def runExperiment(env, num_episodes, agent):
   return (steps, rewards)
 
 
-def averageOverRuns(Agent, env, runs = 20):
+def averageOverRuns(Agent, Env, exp):
   rewards = []
   total_steps = []
-  for run in range(runs):
+  for run in range(exp.runs):
+    env = Env(exp.env_params)
     np.random.seed(run)
     random.seed(run)
-    agent = Agent(env.observationShape(), env.numActions())
-    (steps, r) = runExperiment(env, 1000, agent)
+    agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
+    (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
     rewards.append(r)
     total_steps.append(steps)
 
   metric = np.array(total_steps)
   mean = metric.mean(axis=0)
-  stderr = metric.std(axis=0) / np.sqrt(runs)
+  stderr = metric.std(axis=0) / np.sqrt(exp.runs)
 
   return (mean, stderr)
 
@@ -88,51 +80,43 @@ def plotRewards(ax, rewards, stderr, label):
   ax.plot(rewards, label=label)
   ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
 
-fig = plt.figure()
-ax = plt.axes()
-
-# def main():
-# env = GridWorld([30, 30], 700)
-env = CtsGridWorld(400)
-
-# Optimal for riverswim, doesn't make sense on gridworld
-# (rewards, stderr) = averageOverRuns(Optimal, env, 20)
-# plotRewards(ax, rewards, stderr, 'Optimal')
-#
-# (rewards, stderr) = averageOverRuns(Q, env, 1)
-# plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
-
-# (rewards, stderr) = averageOverRuns(TabularQ, env, 1)
-# plotRewards(ax, rewards, stderr, 'Q epsilon=0.1')
-#
-# (rewards, stderr) = averageOverRuns(UCB, env, 5)
-# plotRewards(ax, rewards, stderr, 'UCB')
-
-(rewards, stderr) = averageOverRuns(LinearQ, env, 1)
-plotRewards(ax, rewards, stderr, 'Linear-Q')
-
-# (rewards, stderr) = averageOverRuns(TabularRTabularQ, env, 1)
-# plotRewards(ax, rewards, stderr, 'QReward value-function')
-
-plt.legend()
-plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-plt.xlabel("Number of Episodes")
-plt.ylabel("Average Number of Steps to Reach Goal")
-plt.show()
-
-
-
 def parse_args():
-    parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")
-    # Environment
-    parser.add_argument("--environment", type=str, default="gridworld", help="environment")
-    parser.add_argument("--agent", type=str, default="Q", help="environment")
+  parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")
+  parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
+  parser.add_argument("-e", type=str, help="path to experiment description json file")
+  parser.add_argument("-r", type=int, help="number of runs to complete")
+  parser.add_argument("-b", type=str, default='results', help="base path for saving results")
+
+  args = parser.parse_args()
+  if args.i == None or args.r == None or args.i == None:
+    print('Please run again using (without angle braces):')
+    print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
+    exit(1)
+
+  return args
 
 
+# fig = plt.figure()
+# ax = plt.axes()
 
-    return parser.parse_args()
+args = parse_args()
+exp = ExperimentDescription(args.e, args.i, args.r)
 
-# Notes:
-# windy gridworld -> stochastic world.. maybe ignore stochasticity at first
-# Try mountain car? This is a continuous-state domain
-# river swim: states have far enough variance... How is this determined?
+Env = registry.getEnvironment(exp)
+Agent = registry.getAgent(exp)
+
+(rewards, stderr) = averageOverRuns(Agent, Env, exp)
+# plotRewards(ax, rewards, stderr, 'Linear-Q')
+
+# save some metric for performance to file
+meanResult = np.mean(rewards)
+path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
+os.makedirs(path, exist_ok=True)
+with open(f'{path}/mean.csv', 'w') as f:
+    f.write(str(meanResult))
+
+# plt.legend()
+# plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+# plt.xlabel("Number of Episodes")
+# plt.ylabel("Average Number of Steps to Reach Goal")
+# plt.show()
