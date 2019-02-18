@@ -9,12 +9,8 @@ class BNNApproximation(BayesianApproximator):
         super().__init__(state_dimensions, num_acts)
         self.session = tf.InteractiveSession()
         self.bnn = new_bnn()
-        #TODO refactor this back out into the BNN method
         self.bnn.compile(optimizer=tf.keras.optimizers.Adam(1e-2),
             loss=tf.losses.huber_loss)
-        # input = np.array(state_dimensions + self.convert_action(self.num_actions))
-        # self.history = self.bnn.fit(input, 0, batch_size=32,
-        #     epochs=1000, verbose=1)
 
 
     def update_stats(self, s, a, val=0.0, batch_size = 32, epochs = 100):
@@ -22,9 +18,8 @@ class BNNApproximation(BayesianApproximator):
             raise ValueError("Invalid value to update stats", s, a, val)
 
         input_vector = np.concatenate((s, self.convert_action(a)))
-        print(input_vector.shape)
 
-        self.bnn.fit(np.array([[input_vector]]), np.array([[val]]), batch_size=batch_size, epochs=epochs)
+        self.bnn.fit(np.array([[input_vector]]), np.array([[val]]), batch_size=batch_size, epochs=epochs, verbose=0)
 
 
     def sample(self, s, a, n):

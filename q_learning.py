@@ -48,7 +48,7 @@ def runExperiment(env, num_episodes, agent):
       #     plt.savefig(f'figs/heat_map.{step}.{a}.png')
 
     steps.append(step)
-    print(episode, step)
+    print("Episode", episode, " Step", step)
     # agent.print()
 
   return (steps, rewards)
@@ -64,7 +64,9 @@ def averageOverRuns(Agent, Env, exp):
     agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
     (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
     rewards.append(r)
+    print("Completed a run")
     total_steps.append(steps)
+    # print("Completed run %d of %d"%(, exp.runs)
 
   metric = np.array(total_steps)
   mean = metric.mean(axis=0)

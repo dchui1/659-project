@@ -3,8 +3,8 @@ from agents.TabularQ import TabularQ
 from BNNApproximation import BNNApproximation
 
 class BnnRTabularQ(TabularQ):
-    def __init__(self, state_shape, num_acts):
-        super().__init__(state_shape, num_acts)
+    def __init__(self, state_shape, num_acts, params):
+        super().__init__(state_shape, num_acts, params)
 
         self.rewardApprox = BNNApproximation(state_shape, num_acts)
         self.epsilon = 0.05
