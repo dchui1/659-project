@@ -5,7 +5,6 @@ import math
 
 def test_bnn():
     z_score_limit = 2.
-    bnnApproximation = BNNApproximation(np.array([10, 10]), 4)
     mu = 10.0
     sigma = 1.0
     np.random.seed(42)
@@ -15,8 +14,14 @@ def test_bnn():
     empirical_stddev = np.std(values)
     print("Empirical mean", empirical_mean)
     print("Empirical std dev", empirical_stddev)
+    get_z_score(100, values, empirical_mean, empirical_stddev)
+    get_z_score(10, values, empirical_mean, empirical_stddev)
 
-    [bnnApproximation.update_stats(np.array([1, 1]), 3, val=x) for x in values]
+
+
+def get_z_score(epochs, values, empirical_mean, empirical_stddev):
+    bnnApproximation = BNNApproximation(np.array([10, 10]), 4)
+    [bnnApproximation.update_stats(np.array([1, 1]), 3, val=x, epochs=epochs) for x in values]
     samples = np.asarray(bnnApproximation.sample(np.array([1, 1]), 3, 100))
     print("Samples mean", samples.mean())
     print("Samples std dev", samples.std())
@@ -24,6 +29,7 @@ def test_bnn():
     z_score = (samples.mean() - empirical_mean) / se
 
     print("Z score", z_score)
+
 
 
     # new_samples = np.asarray(bnnApproximation.sample(np.array([10, 10]), 1, 100))
