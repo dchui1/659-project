@@ -22,9 +22,8 @@ class BNNApproximation(BayesianApproximator):
             raise ValueError("Invalid value to update stats", s, a, val)
 
         input_vector = np.concatenate((s, self.convert_action(a)))
-        print(input_vector.shape)
 
-        self.bnn.fit(np.array([[input_vector]]), np.array([[val]]), batch_size=batch_size, epochs=epochs)
+        self.bnn.fit(np.array([[input_vector]]), np.array([[val]]), batch_size=batch_size, epochs=epochs, verbose=0)
 
 
     def sample(self, s, a, n):
