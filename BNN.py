@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     # run model
     f = new_bnn()
-    f.compile(optimizer=tf.keras.optimizers.Adam(1e-2), loss=tf.losses.huber_loss)
+    f.compile(optimizer=tf.keras.optimizers.SGD(1e-1), loss=tf.losses.huber_loss)
     history = f.fit(x, y, batch_size=32, epochs=1000, verbose=1)#, class_weight=W)
     # print("history", history)
     #
