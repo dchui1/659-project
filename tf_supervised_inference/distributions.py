@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from itertools import product
-from linear_model import LinearModel
+from tf_supervised_inference.linear_model import LinearModel
 from scipy.stats import t
 
 
@@ -12,11 +12,11 @@ class T(object):
     def distribution(self):
         df = 2 * self.mnig_prior.ig_prior.shape
         mu = tf.transpose(self.mnig_prior.normal_prior.means)
-        scale = self.mnig_prior.ig_prior.scale
+        scale = self.mnig_prior.normal_prior.covariance()
         return tf.contrib.distributions.StudentT(df, mu, scale)
 
-    def sample(self):
-        return tf.transpose(self.distribution().sample())
+    def sample(self, num_samples=1):
+        return tf.transpose(self.distribution().sample(num_samples))
 
     def next(self, x, y): # "x" represents the (s, a) pair, "y" represents the observed reward
         mnig_posterior = self.mnig_prior.next(x, y)
