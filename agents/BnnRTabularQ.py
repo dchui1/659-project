@@ -11,8 +11,9 @@ class BnnRTabularQ(TabularQ):
         self.rewardSamples = 10
 
     def update(self, s, sp, r, a, done):
-        self.rewardApprox.update_stats(s, a, r)
-        samples = self.rewardApprox.sample(s, a, self.rewardSamples)
+        x = np.concatenate(s, [a])
+        self.rewardApprox.update_stats(x, r)
+        samples = self.rewardApprox.sample(x, self.rewardSamples)
 
         bonus = np.max(samples) - np.mean(samples)
         # print("B bonus", bonus)

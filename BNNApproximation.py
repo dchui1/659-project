@@ -13,7 +13,10 @@ class BNNApproximation(BayesianApproximator):
             loss=tf.losses.huber_loss)
 
 
-    def update_stats(self, s, a, val=0.0, batch_size = 1, epochs = 10):
+    def update_stats(self, x, val=0.0, batch_size = 1, epochs = 10):
+        s = x[:-1]
+        a = x[- 1]
+
         if self.dimensions.shape != s.shape or not a <= self.num_actions:
             raise ValueError("Invalid value to update stats", s, a, val)
 
@@ -26,7 +29,9 @@ class BNNApproximation(BayesianApproximator):
         self.bnn.fit(np.array([[input_vector]]), np.array([[val]]), batch_size=batch_size, epochs=epochs, verbose=0)
 
 
-    def sample(self, s, a, n):
+    def sample(self, x, n):
+        s = x[:-1]
+        a = x[len(x) - 1]
         if self.dimensions.shape != s.shape or not a <= self.num_actions:
             raise ValueError("Invalid value to sample", s, a)
 
