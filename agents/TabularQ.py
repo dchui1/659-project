@@ -7,7 +7,7 @@ class TabularQ(Agent):
         self.alpha = params['alpha']
         self.gamma = params['gamma']
         self.epsilon = params['epsilon']
-        self.nu = .95
+        self.nu = 1
 
         self.state_shape = state_shape
         self.num_states = np.prod(state_shape)
