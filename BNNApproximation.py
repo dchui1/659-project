@@ -32,8 +32,8 @@ class BNNApproximation(BayesianApproximator):
 
         input_vector = np.concatenate((self.convert_state(s), self.convert_action(a)))
 
-        sample_fn = self.bnn(np.array([[input_vector]], dtype=np.float32))
-        predictions = [self.session.run(sample_fn) for i in range(n)]
+
+        predictions = [self.bnn.predict(np.array([[input_vector]], dtype=np.float32)) for i in range(n)]
         return predictions
 
     def convert_state(self, s):
