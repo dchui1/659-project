@@ -37,7 +37,7 @@ def runExperiment(env, num_episodes, agent):
 
       s = sp # update the current state to sp
       a = agent.getAction(s) # update the current action to a
-
+      # print("State action pair", s, a)
       total_reward += r
       rewards.append(total_reward)
 
