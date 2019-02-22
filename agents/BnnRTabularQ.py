@@ -10,14 +10,15 @@ class BnnRTabularQ(TabularQ):
         self.rewardApprox = BNNApproximation(state_shape, num_acts)
         self.epsilon = 0.05
         self.rewardSamples = 10
+        self.epochs = params['epochs']
 
     def update(self, s, sp, r, a, done):
         x = np.concatenate((self.convert_state(s),self.convert_action(a)))
-        self.rewardApprox.update_stats(x, r)
+        self.rewardApprox.update_stats(x, r, epochs=self.epochs)
         samples = self.rewardApprox.sample(x, self.rewardSamples)
 
         bonus = np.max(samples) - np.mean(samples)
-        # print("B bonus", bonus)
+        print("B bonus", bonus)
         super().update(s, sp, r, bonus, a, done)
 
     def convert_state(self, s):

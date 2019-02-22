@@ -24,9 +24,13 @@ def test_bnn():
 
 
 def get_z_score(epochs, values, empirical_mean, empirical_stddev):
-    bnnApproximation = BNNApproximation(np.array([10, 10]), 4)
-    [bnnApproximation.update_stats(np.array([1, 1]), 3, val=x, epochs=epochs) for x in values]
-    samples = np.asarray(bnnApproximation.sample(np.array([1, 1]), 3, 100))
+    dimensions = np.array([10, 10])
+    num_actions = 4
+    bnnApproximation = BNNApproximation(dimensions, num_actions)
+    x = np.concatenate((convert_state(np.array([1, 1]), dimensions), convert_action(3, num_actions)))
+    print("X", x)
+    [bnnApproximation.update_stats(x, val=y, epochs=epochs) for y in values]
+    samples = np.asarray(bnnApproximation.sample(x, 100))
     print("The samples", samples)
     print("Samples mean", samples.mean())
     print("Samples std dev", samples.std())
@@ -34,6 +38,21 @@ def get_z_score(epochs, values, empirical_mean, empirical_stddev):
     z_score = (samples.mean() - empirical_mean) / se
 
     print("Z score", z_score)
+
+
+def convert_state(s, dimensions):
+    sparse_vectors = []
+    for i in range(len(dimensions)):
+        arr = np.zeros(dimensions[i])
+        arr[s[i]] = 1
+        sparse_vectors.append(arr)
+    return np.concatenate(sparse_vectors)
+
+def convert_action(a, num_actions):
+    arr = np.zeros(num_actions)
+    arr[a-1] = 1
+    return arr
+
 
 
 
