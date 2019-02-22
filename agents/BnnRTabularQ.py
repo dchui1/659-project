@@ -5,16 +5,30 @@ from BNNApproximation import BNNApproximation
 class BnnRTabularQ(TabularQ):
     def __init__(self, state_shape, num_acts, params):
         super().__init__(state_shape, num_acts, params)
-
+        self.dimensions = state_shape
+        self.num_actions = num_acts
         self.rewardApprox = BNNApproximation(state_shape, num_acts)
         self.epsilon = 0.05
         self.rewardSamples = 10
 
     def update(self, s, sp, r, a, done):
-        x = np.concatenate([s,[a]])
+        x = np.concatenate((self.convert_state(s),self.convert_action(a)))
         self.rewardApprox.update_stats(x, r)
         samples = self.rewardApprox.sample(x, self.rewardSamples)
 
         bonus = np.max(samples) - np.mean(samples)
         # print("B bonus", bonus)
         super().update(s, sp, r, bonus, a, done)
+
+    def convert_state(self, s):
+        sparse_vectors = []
+        for i in range(len(self.dimensions)):
+            arr = np.zeros(self.dimensions[i])
+            arr[s[i]] = 1
+            sparse_vectors.append(arr)
+        return np.concatenate(sparse_vectors)
+
+    def convert_action(self, a):
+        arr = np.zeros(self.num_actions)
+        arr[a-1] = 1
+        return arr

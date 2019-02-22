@@ -98,8 +98,7 @@ def parse_args():
   return args
 
 
-# fig = plt.figure()
-# ax = plt.axes()
+
 
 args = parse_args()
 exp = ExperimentDescription(args.e, args.i, args.r)
@@ -108,7 +107,9 @@ Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
 (rewards, stderr) = averageOverRuns(Agent, Env, exp)
-# plotRewards(ax, rewards, stderr, 'Linear-Q')
+fig = plt.figure()
+ax = plt.axes()
+plotRewards(ax, rewards, stderr, 'Linear-Q')
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
@@ -117,8 +118,8 @@ os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
     f.write(str(meanResult))
 
-# plt.legend()
-# plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-# plt.xlabel("Number of Episodes")
-# plt.ylabel("Average Number of Steps to Reach Goal")
-# plt.show()
+plt.legend()
+plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+plt.xlabel("Number of Episodes")
+plt.ylabel("Average Number of Steps to Reach Goal")
+plt.show()
