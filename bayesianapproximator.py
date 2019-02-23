@@ -3,9 +3,12 @@ import math
 import scipy
 from scipy.stats import t
 import matplotlib.pyplot as plt
+from tf_supervised_inference.distributions import T, \
+    MultivariateNormalInverseGamma, InverseGamma, MultivariateNormal
+from tf_supervised_inference.linear_model import LinearModel
+
 
 class BayesianApproximator():
-
     def __init__(self, state_dimensions, num_acts):
 
         self.dimensions = np.array(state_dimensions)
@@ -16,6 +19,24 @@ class BayesianApproximator():
 
     def sample(self, x, n):
         raise NotImplementedError
+
+
+class TDistBayesianApproximation(BayesianApproximator):
+    def __init__(self, state_dimensions, num_acts, params):
+        super().__init__(state_dimensions, num_acts)
+        ig_prior = InverseGamma(params["shape"], params["scale"]) # prior shape and scale. a large scale means the data is more broad.
+        normal_prior = MultivariateNormal(params["mean"], params["precision"]) # large variance around 0.0
+        self.mnig_prior = MultivariateNormalInverseGamma(normal_prior, ig_prior)
+        self.distribution_dimension = np.prod(state_dimensions) * num_acts
+        self.T_distribution = T(self.mnig_prior) 
+    def update_stats(self, x, y):
+        self.T_distribution = self.T_distribution.next(x, y)
+        return self.T_distribution
+
+    def sample(self, num_samples):
+        weights = self.T_distribution.sample(num_samples)
+        return [LinearModel(self.posterior.sample()) for _ in range(num_samples)]
+
 
 class TabularBayesianApproximation(BayesianApproximator):
   def __init__(self, state_dimensions, num_acts):
