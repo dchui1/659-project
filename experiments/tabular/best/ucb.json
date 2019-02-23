@@ -1,0 +1,16 @@
+{
+    "name": "tabular",
+    "agent": "ucb",
+    "environment": "gridworld",
+    "metaParameters": {
+        "alpha": [0.5],
+        "epsilon": [0.05],
+        "c": [0.01],
+        "gamma": 0.9
+    },
+    "envParameters": {
+        "shape": [30, 30],
+        "steps": 700,
+        "episodes": 1000
+    }
+}
