@@ -12,7 +12,7 @@ class T(object):
     def distribution(self):
         df = 2 * self.mnig_prior.ig_prior.shape
         mu = tf.transpose(self.mnig_prior.normal_prior.means)
-        scale = self.mnig_prior.normal_prior.covariance()
+        scale = self.mnig_prior.normal_prior.covariance() * (mnig_prior.ig_prior.scale / mnig_prior.ig_prior.shape)
         return tf.contrib.distributions.StudentT(df, mu, scale)
 
     def sample(self, num_samples=1):
