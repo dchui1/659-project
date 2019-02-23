@@ -24,16 +24,16 @@ def test_bnn():
 
 
 def get_z_score(epochs, values, empirical_mean, empirical_stddev):
-    dimensions = np.array([10, 10])
+    dimensions = np.array([2, 2])
     num_actions = 4
-    bnnApproximation = BNNApproximation(dimensions, num_actions)
+    bnnApproximation = BNNApproximation(dimensions, num_actions, -1, 0.5, 0.1, 0.1)
     x = np.concatenate((convert_state(np.array([1, 1]), dimensions), convert_action(3, num_actions)))
     print("X", x)
     [bnnApproximation.update_stats(x, val=y, epochs=epochs) for y in values]
     samples = np.asarray(bnnApproximation.sample(x, 100))
-    print("The samples", samples)
-    print("Samples mean", samples.mean())
-    print("Samples std dev", samples.std())
+    # print("The samples", samples)
+    print("Sampled mean", samples.mean())
+    print("Sampled std dev", samples.std())
     se = empirical_stddev / math.sqrt(len(samples))
     z_score = (samples.mean() - empirical_mean) / se
 

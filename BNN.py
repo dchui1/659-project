@@ -4,7 +4,7 @@ import tensorflow_probability as tfp
 # some the research2018 repo can be accessed from https://github.com/dmorrill10/research2018.git
 
 class KernelPrior:
-    def __init__(self, stddev=1):
+    def __init__(self, stddev):
         self.stddev = stddev
 
     def output(self, dtype, shape, name, trainable, add_variable_fn):
@@ -23,7 +23,7 @@ def weighted_divergence_fn(log_weight):
     return divergence_fn
 
 
-def new_bnn(log_divergence_weight=-10, prior_stddev=1, residual_weight=0.1):
+def new_bnn(log_divergence_weight=-1, prior_stddev=0.5, residual_weight=0.1):
     '''
     Creates a new Bayesian neural network.
 

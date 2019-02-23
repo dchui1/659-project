@@ -7,7 +7,12 @@ class BnnRTabularQ(TabularQ):
         super().__init__(state_shape, num_acts, params)
         self.dimensions = state_shape
         self.num_actions = num_acts
-        self.rewardApprox = BNNApproximation(state_shape, num_acts)
+        log_divergence_weight = params['log_divergence_weight']
+        prior_stddev = params['prior_stddev']
+        residual_weight = params['residual_weight']
+        blr_alpha = params['blr_alpha']
+        self.rewardApprox = BNNApproximation(state_shape, num_acts,
+                                log_divergence_weight, prior_stddev, residual_weight, blr_alpha)
         self.epsilon = 0.05
         self.rewardSamples = 10
         self.epochs = params['epochs']
@@ -18,7 +23,7 @@ class BnnRTabularQ(TabularQ):
         samples = self.rewardApprox.sample(x, self.rewardSamples)
 
         bonus = np.max(samples) - np.mean(samples)
-        print("B bonus", bonus)
+        print("B bonus", bonus, np.max(samples), np.mean(samples))
         super().update(s, sp, r, bonus, a, done)
 
     def convert_state(self, s):
