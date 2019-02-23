@@ -6,6 +6,7 @@ from agents.BnnRTabularQ import BnnRTabularQ
 
 from agents.RiverswimOptimal import Optimal
 from agents.UCB import UCB
+from agents.LinearQ_TDistR import TDistRLinearQ
 
 # environments
 from environments.gridworld import GridWorld
@@ -20,9 +21,12 @@ def getAgent(exp):
         return UCB
     if exp.agent == 'tabular-r tabular-q':
         return TabularRTabularQ
+
     if exp.agent == 'blr tabular-q':
         # return
         return BnnRTabularQ
+    if exp.agent == 'T-distribution-r linear-q':
+        return TDistRLinearQ
 
     raise NotImplementedError
 
