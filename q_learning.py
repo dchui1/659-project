@@ -37,7 +37,7 @@ def runExperiment(env, num_episodes, agent):
 
       s = sp # update the current state to sp
       a = agent.getAction(s) # update the current action to a
-
+      # print("State action pair", s, a)
       total_reward += r
       rewards.append(total_reward)
 
@@ -48,7 +48,7 @@ def runExperiment(env, num_episodes, agent):
       #     plt.savefig(f'figs/heat_map.{step}.{a}.png')
 
     steps.append(step)
-    print(episode, step)
+    print("Episode", episode, " Step", step)
     # agent.print()
 
   return (steps, rewards)
@@ -64,7 +64,9 @@ def averageOverRuns(Agent, Env, exp):
     agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
     (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
     rewards.append(r)
+    print("Completed a run")
     total_steps.append(steps)
+    # print("Completed run %d of %d"%(, exp.runs)
 
   metric = np.array(total_steps)
   mean = metric.mean(axis=0)
@@ -96,8 +98,7 @@ def parse_args():
   return args
 
 
-# fig = plt.figure()
-# ax = plt.axes()
+
 
 args = parse_args()
 exp = ExperimentDescription(args.e, args.i, args.r)
@@ -106,7 +107,9 @@ Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
 (rewards, stderr) = averageOverRuns(Agent, Env, exp)
-# plotRewards(ax, rewards, stderr, 'Linear-Q')
+fig = plt.figure()
+ax = plt.axes()
+plotRewards(ax, rewards, stderr, 'Linear-Q')
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
@@ -115,8 +118,8 @@ os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
     f.write(str(meanResult))
 
-# plt.legend()
-# plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-# plt.xlabel("Number of Episodes")
-# plt.ylabel("Average Number of Steps to Reach Goal")
-# plt.show()
+plt.legend()
+plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+plt.xlabel("Number of Episodes")
+plt.ylabel("Average Number of Steps to Reach Goal")
+plt.show()

@@ -5,46 +5,39 @@ from bayesianapproximator import BayesianApproximator
 
 class BNNApproximation(BayesianApproximator):
 
-    def __init__(self, state_dimensions, num_acts):
+    def __init__(self, state_dimensions, num_acts,
+                    log_divergence_weight, prior_stddev, residual_weight,
+                    blr_alpha):
         super().__init__(state_dimensions, num_acts)
         self.session = tf.InteractiveSession()
-        self.bnn = new_bnn()
-        #TODO refactor this back out into the BNN method
-        self.bnn.compile(optimizer=tf.keras.optimizers.Adam(1e-2),
+        self.bnn = new_bnn(log_divergence_weight, prior_stddev, residual_weight)
+        self.bnn.compile(optimizer=tf.keras.optimizers.SGD(blr_alpha),
             loss=tf.losses.huber_loss)
-        # input = np.array(state_dimensions + self.convert_action(self.num_actions))
-        # self.history = self.bnn.fit(input, 0, batch_size=32,
-        #     epochs=1000, verbose=1)
 
 
-    def update_stats(self, x, val=0.0, batch_size = 32, epochs = 100):
-        s = x[:-1]
-        a = x[len(x) - 1]
-        if self.dimensions.shape != s.shape or not a <= self.num_actions:
-            raise ValueError("Invalid value to update stats", s, a, val)
+    def update_stats(self, x, val=0.0, batch_size = 1, epochs = 10):
+        # s = x[:-1]
+        # a = x[- 1]
+        # if self.dimensions.shape != s.shape or not a <= self.num_actions:
+        #     raise ValueError("Invalid value to update stats", s, a, val)
 
-        input_vector = np.concatenate((s, self.convert_action(a)))
-        print(input_vector.shape)
+        # print("State action", s, a)
+        # input_vector = np.concatenate((s, a))
+        # print("The input vector shape", input_vector.shape)
+        # print("The input vector", input_vector)
 
-        self.bnn.fit(np.array([[input_vector]]), np.array([[val]]), batch_size=batch_size, epochs=epochs)
+
+        self.bnn.fit(np.array([[x]]), np.array([[val]]), batch_size=batch_size, epochs=epochs, verbose=0)
 
 
     def sample(self, x, n):
-        s = x[:-1]
-        a = x[len(x) - 1]
-        if self.dimensions.shape != s.shape or not a <= self.num_actions:
-            raise ValueError("Invalid value to sample", s, a)
+        # s = x[:-1]
+        # a = x[len(x) - 1]
+        # if self.dimensions.shape != s.shape or not a <= self.num_actions:
+        #     raise ValueError("Invalid value to sample", s, a)
+        #
+        # input_vector = np.concatenate((s, a))
 
-        input_vector = np.concatenate((s, self.convert_action(a)))
 
-        # with self.session as sess:
-            # sess.run(tf.global_variables_initializer())
-            # sess.run(tf.tables_initializer())
-        sample_fn = self.bnn(np.array([[input_vector]], dtype=np.float32))
-        predictions = [self.session.run(sample_fn) for i in range(n)]
+        predictions = [self.bnn.predict(np.array([[x]], dtype=np.float32)) for i in range(n)]
         return predictions
-
-    def convert_action(self, a):
-        arr = np.zeros(self.num_actions)
-        arr[a-1] = 1
-        return arr
