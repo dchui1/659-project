@@ -3,6 +3,25 @@ import numpy as np
 from itertools import product
 from tf_supervised_inference.linear_model import LinearModel
 from scipy.stats import t
+'''
+In order to create the T-distribution which will represent the Predicted Reward
+Model, we need a prior MNIG distribution.
+The MNIG is defined via an IG and a Normal distribution.
+
+Since we want a high variance for the "prior" T-dist, then the scale this T-dist
+must be > 1. Moreover, since T.scale = Normal.covariance * IG.scale / IG.shape,
+then we want the IG.scale to be high and the IG.shape to be low.
+Also, we need Normal.precision to be low (since the precision is the inverse of
+the variance).
+
+As for the "prior" T.mean, we want this value to be close to zero, therefore the
+prior Normal.mean will be set to zero.
+
+Putting all the above in practice will allow us to create a prior Multivariate
+Normal and a prior IG distribution, which will generate a reasonable prior MNIG
+distribution.
+
+'''
 
 
 class T(object):
@@ -12,13 +31,16 @@ class T(object):
     def distribution(self):
         df = 2 * self.mnig_prior.ig_prior.shape
         mu = tf.transpose(self.mnig_prior.normal_prior.means)
-        scale = self.mnig_prior.normal_prior.covariance() * (mnig_prior.ig_prior.scale / mnig_prior.ig_prior.shape)
+        scale = self.mnig_prior.normal_prior.covariance() * (
+            self.mnig_prior.ig_prior.scale / self.mnig_prior.ig_prior.shape)
         return tf.contrib.distributions.StudentT(df, mu, scale)
 
     def sample(self, num_samples=1):
         return tf.transpose(self.distribution().sample(num_samples))
 
-    def next(self, x, y): # "x" represents the (s, a) pair, "y" represents the observed reward
+    def next(
+            self, x, y
+    ):  # "x" represents the (s, a) pair, "y" represents the observed reward
         mnig_posterior = self.mnig_prior.next(x, y)
         return self.__class__(mnig_posterior)
 

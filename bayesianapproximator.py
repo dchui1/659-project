@@ -24,18 +24,27 @@ class BayesianApproximator():
 class TDistBayesianApproximation(BayesianApproximator):
     def __init__(self, state_dimensions, num_acts, params):
         super().__init__(state_dimensions, num_acts)
-        ig_prior = InverseGamma(params["shape"], params["scale"]) # prior shape and scale. a large scale means the data is more broad.
-        normal_prior = MultivariateNormal(params["mean"], params["precision"]) # large variance around 0.0
-        self.mnig_prior = MultivariateNormalInverseGamma(normal_prior, ig_prior)
+        ig_prior = InverseGamma(
+            params["shape"], params["scale"]
+        )  # prior shape and scale. A large scale means the data is more broad.
+        normal_prior = MultivariateNormal.from_shared_mean_and_log_precision(
+            params["mean"],
+            params["log_precision"],   # small precision = large variance
+            num_dims) # We need to find a way to pass the number of dimensions to this class.
+        self.mnig_prior = MultivariateNormalInverseGamma(
+            normal_prior, ig_prior)
         self.distribution_dimension = np.prod(state_dimensions) * num_acts
-        self.T_distribution = T(self.mnig_prior) 
+        self.T_distribution = T(self.mnig_prior)
+
     def update_stats(self, x, y):
         self.T_distribution = self.T_distribution.next(x, y)
         return self.T_distribution
 
     def sample(self, num_samples):
         weights = self.T_distribution.sample(num_samples)
-        return [LinearModel(self.posterior.sample()) for _ in range(num_samples)]
+        return [
+            LinearModel(self.posterior.sample()) for _ in range(num_samples)
+        ]
 
 
 class TabularBayesianApproximation(BayesianApproximator):

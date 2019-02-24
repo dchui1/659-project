@@ -12,8 +12,8 @@ class TDistRLinearQ(LinearQ):
     def update(self, s, sp, r, a, num_samples, done):
         x = self.tc.representation(s, a)
         self.rewardApprox.update_stats(x, r)
-        samples = self.rewardApprox.sample(num_samples) # change this to 1000
-        bonus = max(samples) - np.mean(samples) # wouldn't this raise a type error?
+        samples = self.rewardApprox.sample(num_samples)
+        bonus = max(samples) - np.mean(samples)
         super().update(s, sp, r + bonus, a, done)
 
 
