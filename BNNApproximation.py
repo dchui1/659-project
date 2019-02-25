@@ -6,11 +6,11 @@ from bayesianapproximator import BayesianApproximator
 class BNNApproximation(BayesianApproximator):
 
     def __init__(self, state_dimensions, num_acts,
-                    log_divergence_weight, prior_stddev, residual_weight,
+                    log_divergence_weight, prior_stddev,
                     blr_alpha):
         super().__init__(state_dimensions, num_acts)
         self.session = tf.InteractiveSession()
-        self.bnn = new_bnn(log_divergence_weight, prior_stddev, residual_weight)
+        self.bnn = new_bnn(log_divergence_weight, prior_stddev)
         self.bnn.compile(optimizer=tf.keras.optimizers.SGD(blr_alpha),
             loss=tf.losses.huber_loss)
 
