@@ -50,7 +50,7 @@ def convert_state(s, dimensions):
 
 def convert_action(a, num_actions):
     arr = np.zeros(num_actions)
-    arr[a-1] = 1
+    arr[a] = 1
     return arr
 
 
