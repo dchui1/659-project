@@ -7,6 +7,7 @@ from utils.sparse import SparseTC
 
 class LinearQ(Agent):
     def __init__(self, state_shape, num_acts, params):
+        super().__init__(state_shape, num_acts, params)
         self.tiles = params['tiles']
         self.tilings = params['tilings']
         self.epsilon = params['epsilon']

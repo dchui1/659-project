@@ -12,6 +12,7 @@ import random
 import math
 import argparse
 import os
+import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 from bayesianapproximator import *
@@ -29,7 +30,6 @@ def runExperiment(env, num_episodes, agent):
     s = env.reset()
     a = agent.start(s)
     done = False
-
     step = 0
 
     while not done:
@@ -107,10 +107,15 @@ exp = ExperimentDescription(args.e, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
-(rewards, stderr) = averageOverRuns(Agent, Env, exp)
-# fig = plt.figure()
-# ax = plt.axes()
-# plotRewards(ax, rewards, stderr, 'Linear-Q')
+print("here")
+sess = tf.Session()
+with sess.as_default():
+    (rewards, stderr) = averageOverRuns(Agent, Env, exp)
+
+fig = plt.figure()
+ax = plt.axes()
+plotRewards(ax, rewards, stderr, 'LinearQ_TDistR')
+
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
@@ -121,9 +126,10 @@ with open(f'{path}/mean.csv', 'w') as f:
 
 with open(f'{path}/results.pkl', 'wb') as f:
     dump({"results": (rewards, stderr)}, f)
-#
-# plt.legend()
-# plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-# plt.xlabel("Number of Episodes")
-# plt.ylabel("Average Number of Steps to Reach Goal")
-# plt.show()
+
+
+plt.legend()
+plt.title("Average Number of Steps to Reach Goal across 1 Runs")
+plt.xlabel("Number of Episodes")
+plt.ylabel("Average Number of Steps to Reach Goal")
+plt.show()

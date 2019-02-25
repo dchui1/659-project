@@ -35,18 +35,16 @@ class TDistBayesianApproximation(BayesianApproximator):
             num_dims=num_dims)
         self.mnig_prior = MultivariateNormalInverseGamma(
             normal_prior, ig_prior)
-        self.distribution_dimension = np.prod(state_dimensions) * num_acts
         self.T_distribution = T(self.mnig_prior)
 
     def update_stats(self, x, y):
         self.T_distribution = self.T_distribution.next(x, y)
         return self.T_distribution
 
-    def sample(self, num_samples):
+    def sample(self, x, num_samples):
         weights = self.T_distribution.sample(num_samples)
-        return [
-            LinearModel(self.posterior.sample()) for _ in range(num_samples)
-        ]
+        return tf.matmul(weights, x.astype('float32'), transpose_b=True).eval()
+
 
 
 class TabularBayesianApproximation(BayesianApproximator):
