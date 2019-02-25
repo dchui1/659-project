@@ -1,5 +1,5 @@
 class Agent:
-    def __init_(self, state_shape, num_acts, params):
+    def __init__(self, state_shape, num_acts, params):
         self.state_shape = state_shape
         self.num_acts = num_acts
         self.params = params
