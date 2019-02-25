@@ -119,7 +119,7 @@ os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
     f.write(str(meanResult))
 
-with open(f'{path}/results.pkl', 'w') as f:
+with open(f'{path}/results.pkl', 'wb') as f:
     dump({"results": (rewards, stderr)}, f)
 #
 # plt.legend()
