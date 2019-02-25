@@ -82,7 +82,7 @@ class MultivariateNormal(object):
     def from_shared_mean_and_log_precision(cls, mean, log_precision, num_dims):
         precision = tf.exp(log_precision)
         return cls(
-            tf.constant(mean / precision, shape=[num_dims, 1]),
+            tf.fill([num_dims, 1], mean / precision),
             precision * tf.eye(num_dims))
 
     def __init__(self, unscaled_means, precision, normal_prior=None):
@@ -163,8 +163,8 @@ class MultivariateNormalInverseGamma(object):
         return self.normal_prior.sample(self.ig_prior.sample())
 
     def next(self, x, y):
-        x = tf.convert_to_tensor(x)
-        y = tf.convert_to_tensor(y)
+        x = tf.convert_to_tensor(x, dtype=np.float32)
+        y = tf.convert_to_tensor(y, dtype=np.float32)
 
         x_T = tf.transpose(x)
         weighted_feature_sums = x_T @ y

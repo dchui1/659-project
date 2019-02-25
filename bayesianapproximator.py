@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 import math
 import scipy
 from scipy.stats import t
@@ -27,10 +28,11 @@ class TDistBayesianApproximation(BayesianApproximator):
         ig_prior = InverseGamma(
             params["ig_prior_shape"], params["ig_prior_scale"]
         )  # prior shape and scale. A large scale means the data is more broad.
+        num_dims = np.square(params["tiles"]) * params["tilings"] * num_acts
         normal_prior = MultivariateNormal.from_shared_mean_and_log_precision(
             params["normal_prior_mean"],
             params["normal_prior_log_precision"],   # small precision = large variance
-            num_dims = (params["tiles"] ^ 2) * params["tilings"] * num_acts) # 2 is the dimension of the state space
+            num_dims=num_dims)
         self.mnig_prior = MultivariateNormalInverseGamma(
             normal_prior, ig_prior)
         self.distribution_dimension = np.prod(state_dimensions) * num_acts
