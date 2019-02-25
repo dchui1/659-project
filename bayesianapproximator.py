@@ -25,11 +25,11 @@ class TDistBayesianApproximation(BayesianApproximator):
     def __init__(self, state_dimensions, num_acts, params):
         super().__init__(state_dimensions, num_acts)
         ig_prior = InverseGamma(
-            params["shape"], params["scale"]
+            params["ig_prior_shape"], params["ig_prior_scale"]
         )  # prior shape and scale. A large scale means the data is more broad.
         normal_prior = MultivariateNormal.from_shared_mean_and_log_precision(
-            params["mean"],
-            params["log_precision"],   # small precision = large variance
+            params["normal_prior_mean"],
+            params["normal_prior_log_precision"],   # small precision = large variance
             num_dims = (params["tiles"] ^ 2) * params["tilings"] * num_acts) # 2 is the dimension of the state space
         self.mnig_prior = MultivariateNormalInverseGamma(
             normal_prior, ig_prior)
