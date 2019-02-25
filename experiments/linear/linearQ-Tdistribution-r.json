@@ -1,0 +1,21 @@
+{
+    "name": "linear",
+    "agent": "linear-q-TdistR",
+    "environment": "cts-gridworld",
+    "metaParameters": {
+        "tiles": 2,
+        "tilings": 8,
+        "alpha": [0.1],
+        "epsilon": [0.1],
+        "gamma": 0.9,
+        "ig_prior_shape": 0.2,
+        "ig_prior_scale": 5.0,
+        "normal_prior_mean": 0.0,
+        "normal_prior_log_precision": 0.1
+    },
+    "envParameters": {
+        "stepsize": 0.05,
+        "steps": 700,
+        "episodes": 1000
+    }
+}
