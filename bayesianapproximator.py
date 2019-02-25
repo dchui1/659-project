@@ -30,7 +30,7 @@ class TDistBayesianApproximation(BayesianApproximator):
         normal_prior = MultivariateNormal.from_shared_mean_and_log_precision(
             params["mean"],
             params["log_precision"],   # small precision = large variance
-            num_dims) # We need to find a way to pass the number of dimensions to this class.
+            num_dims = (params["tiles"] ^ 2) * params["tilings"] * num_acts) # 2 is the dimension of the state space
         self.mnig_prior = MultivariateNormalInverseGamma(
             normal_prior, ig_prior)
         self.distribution_dimension = np.prod(state_dimensions) * num_acts
