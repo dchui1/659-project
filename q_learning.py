@@ -18,6 +18,7 @@ from bayesianapproximator import *
 from BNNApproximation import BNNApproximation
 from ExperimentDescription import ExperimentDescription
 import utils.registry as registry
+from pickle import dump
 
 def runExperiment(env, num_episodes, agent):
   total_reward = 0
@@ -107,9 +108,9 @@ Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
 (rewards, stderr) = averageOverRuns(Agent, Env, exp)
-fig = plt.figure()
-ax = plt.axes()
-plotRewards(ax, rewards, stderr, 'Linear-Q')
+# fig = plt.figure()
+# ax = plt.axes()
+# plotRewards(ax, rewards, stderr, 'Linear-Q')
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
@@ -118,8 +119,11 @@ os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
     f.write(str(meanResult))
 
-plt.legend()
-plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-plt.xlabel("Number of Episodes")
-plt.ylabel("Average Number of Steps to Reach Goal")
-plt.show()
+with open(f'{path}/results.pkl', 'w') as f:
+    dump({"results": (rewards, stderr)}, f)
+#
+# plt.legend()
+# plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+# plt.xlabel("Number of Episodes")
+# plt.ylabel("Average Number of Steps to Reach Goal")
+# plt.show()
