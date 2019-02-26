@@ -36,9 +36,13 @@ class LinearQ(Agent):
         return self.maxAction(S)
 
     def maxAction(self, s):
-        act_vals = [self.tc.representation(s, a).dot(self.w) for a in range(self.num_acts)]
+        act_vals = self.action_values(s)
         move = argMax(act_vals)
         return move
+
+    def action_values(self, s):
+        act_vals = [self.tc.representation(s, a).dot(self.w) for a in range(self.num_acts)]
+        return act_vals
 
     def getAction(self, Obs):
         return self.next_action

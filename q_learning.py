@@ -40,6 +40,8 @@ def runExperiment(env, num_episodes, agent):
             agent.update(s, sp, r, a, done)
 
             s = sp  # update the current state to sp
+            ac_vals = agent.action_values(s)
+            print(ac_vals)
             a = agent.getAction(s)  # update the current action to a
             # print("State action pair", s, a)
             total_reward += r
@@ -120,7 +122,8 @@ print("here")
 
 fig = plt.figure()
 ax = plt.axes()
-plotRewards(ax, rewards, stderr)
+plotRewards(ax, rewards, stderr, "LinearQ_TDistR")
+
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
