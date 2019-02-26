@@ -1,17 +1,18 @@
 {
     "name": "linear",
-    "agent": "linear-q-TdistR",
+    "agent": "T-distribution-r linear-q",
     "environment": "cts-gridworld",
     "metaParameters": {
         "tiles": 2,
         "tilings": 8,
-        "alpha": [0.1],
-        "epsilon": [0.1],
+        "alpha": [0.1, 0.2, 0.4, 0.8],
+        "epsilon": [0.05, 0.1],
         "gamma": 0.9,
-        "ig_prior_shape": 0.2,
-        "ig_prior_scale": 5.0,
+        "ig_prior_shape": [0.1, 0.2, 0.3],
+        "ig_prior_scale": [3.0, 4.0, 5.0],
         "normal_prior_mean": 0.0,
-        "normal_prior_log_precision": 0.1
+        "normal_prior_log_precision": [0.05, 0.1, 0.15],
+        "num_samples" : 10
     },
     "envParameters": {
         "stepsize": 0.05,
