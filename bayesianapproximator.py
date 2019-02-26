@@ -43,7 +43,7 @@ class TDistBayesianApproximation(BayesianApproximator):
 
     def sample(self, x, num_samples):
         weights = self.T_distribution.sample(num_samples)
-        return tf.matmul(weights, x.astype('float32'), transpose_b=True).eval()
+        return tf.matmul(weights, x.astype('float32'), transpose_b=True).numpy()
 
 
 

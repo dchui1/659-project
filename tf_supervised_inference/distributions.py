@@ -27,16 +27,19 @@ distribution.
 class T(object):
     def __init__(self, mnig_prior):
         self.mnig_prior = mnig_prior
-
-    def distribution(self):
         df = 2 * self.mnig_prior.ig_prior.shape
-        mu = tf.transpose(self.mnig_prior.normal_prior.means)
-        scale = self.mnig_prior.normal_prior.covariance() * (
+        self.mu = tf.transpose(self.mnig_prior.normal_prior.means)
+        self.noise = tf.contrib.distributions.StudentT(df, 0.0, 1.0)
+        self.scale = self.mnig_prior.normal_prior.covariance_scale * tf.sqrt(
             self.mnig_prior.ig_prior.scale / self.mnig_prior.ig_prior.shape)
-        return tf.contrib.distributions.StudentT(df, mu, scale)
 
-    def sample(self, num_samples=1):
-        return tf.transpose(self.distribution().sample(num_samples))
+    def sample(self, batch_size):
+        noise_samples = self.noise.sample([batch_size, self.mu.shape[1].value])
+        weights = self.mu + tf.matmul(
+            self.noise.sample([batch_size, self.mu.shape[1].value]),
+            self.scale,
+            transpose_b=True)
+        return weights
 
     def next(
             self, x, y

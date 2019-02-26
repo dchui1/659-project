@@ -20,85 +20,93 @@ from BNNApproximation import BNNApproximation
 from ExperimentDescription import ExperimentDescription
 import utils.registry as registry
 from pickle import dump
+tf.enable_eager_execution()
+
 
 def runExperiment(env, num_episodes, agent):
-  total_reward = 0
-  rewards = []
-  steps = []
+    total_reward = 0
+    rewards = []
+    steps = []
 
-  for episode in range(num_episodes):
-    s = env.reset()
-    a = agent.start(s)
-    done = False
-    step = 0
+    for episode in range(num_episodes):
+        s = env.reset()
+        a = agent.start(s)
+        done = False
+        step = 0
 
-    while not done:
-      (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
-      agent.update(s, sp, r, a, done)
+        while not done:
+            (sp, r, done, __) = env.step(
+                a)  # Note: the environment "registers" the new sp as env.pos
+            agent.update(s, sp, r, a, done)
 
-      s = sp # update the current state to sp
-      a = agent.getAction(s) # update the current action to a
-      # print("State action pair", s, a)
-      total_reward += r
-      rewards.append(total_reward)
+            s = sp  # update the current state to sp
+            a = agent.getAction(s)  # update the current action to a
+            # print("State action pair", s, a)
+            total_reward += r
+            rewards.append(total_reward)
+            step += 1
 
-      step += 1
+            # for a in range(env.numActions()):
+            #     plt.imshow(agent.rewardApprox.action_var[a].reshape((30, 30)), cmap='hot', vmin=0.0, vmax=0.1)
+            #     plt.savefig(f'figs/heat_map.{ss)tep}.{a}.png')
 
-      # for a in range(env.numActions()):
-      #     plt.imshow(agent.rewardApprox.action_var[a].reshape((30, 30)), cmap='hot', vmin=0.0, vmax=0.1)
-      #     plt.savefig(f'figs/heat_map.{step}.{a}.png')
+        steps.append(step)
+        print("Episode", episode, " Step", step)
+        # agent.print()
 
-    steps.append(step)
-    print("Episode", episode, " Step", step)
-    # agent.print()
-
-  return (steps, rewards)
+    return (steps, rewards)
 
 
 def averageOverRuns(Agent, Env, exp):
-  rewards = []
-  total_steps = []
-  for run in range(exp.runs):
-    env = Env(exp.env_params)
-    np.random.seed(run)
-    random.seed(run)
-    agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-    (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
-    rewards.append(r)
-    print("Completed a run")
-    total_steps.append(steps)
-    # print("Completed run %d of %d"%(, exp.runs)
+    rewards = []
+    total_steps = []
+    for run in range(exp.runs):
+        env = Env(exp.env_params)
+        np.random.seed(run)
+        random.seed(run)
+        agent = Agent(env.observationShape(), env.numActions(),
+                      exp.meta_parameters)
+        (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
+        rewards.append(r)
+        print("Completed a run")
+        total_steps.append(steps)
+        # print("Completed run %d of %d"%(, exp.runs)
 
-  metric = np.array(total_steps)
-  mean = metric.mean(axis=0)
-  stderr = metric.std(axis=0) / np.sqrt(exp.runs)
+    metric = np.array(total_steps)
+    mean = metric.mean(axis=0)
+    stderr = metric.std(axis=0) / np.sqrt(exp.runs)
 
-  return (mean, stderr)
+    return (mean, stderr)
+
 
 def confidenceInterval(mean, stderr):
-  return (mean - stderr, mean + stderr)
+    return (mean - stderr, mean + stderr)
+
 
 def plotRewards(ax, rewards, stderr, label):
-  (low_ci, high_ci) = confidenceInterval(rewards, stderr)
-  ax.plot(rewards, label=label)
-  ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
+    (low_ci, high_ci) = confidenceInterval(rewards, stderr)
+    ax.plot(rewards, label=label)
+    ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
+
 
 def parse_args():
-  parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")
-  parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
-  parser.add_argument("-e", type=str, help="path to experiment description json file")
-  parser.add_argument("-r", type=int, help="number of runs to complete")
-  parser.add_argument("-b", type=str, default='results', help="base path for saving results")
+    parser = argparse.ArgumentParser(
+        "Reinforcement Learning experiments for multiagent environments")
+    parser.add_argument(
+        "-i", type=int, help="integer choosing parameter permutation to run")
+    parser.add_argument(
+        "-e", type=str, help="path to experiment description json file")
+    parser.add_argument("-r", type=int, help="number of runs to complete")
+    parser.add_argument(
+        "-b", type=str, default='results', help="base path for saving results")
 
-  args = parser.parse_args()
-  if args.b == None or args.r == None or args.i == None:
-    print('Please run again using (without angle braces):')
-    print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
-    exit(1)
+    args = parser.parse_args()
+    if args.b == None or args.r == None or args.i == None:
+        print('Please run again using (without angle braces):')
+        print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
+        exit(1)
 
-  return args
-
-
+    return args
 
 
 args = parse_args()
@@ -108,14 +116,11 @@ Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
 print("here")
-sess = tf.Session()
-with sess.as_default():
-    (rewards, stderr) = averageOverRuns(Agent, Env, exp)
+(rewards, stderr) = averageOverRuns(Agent, Env, exp)
 
 fig = plt.figure()
 ax = plt.axes()
-plotRewards(ax, rewards, stderr, 'LinearQ_TDistR')
-
+plotRewards(ax, rewards, stderr)
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
@@ -126,7 +131,6 @@ with open(f'{path}/mean.csv', 'w') as f:
 
 with open(f'{path}/results.pkl', 'wb') as f:
     dump({"results": (rewards, stderr)}, f)
-
 
 plt.legend()
 plt.title("Average Number of Steps to Reach Goal across 1 Runs")
