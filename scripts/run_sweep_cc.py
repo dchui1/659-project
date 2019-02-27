@@ -2,8 +2,8 @@ import argparse
 import os
 from ExperimentDescription import ExperimentDescription
 
-tasks_per_cpu = 3
-cpus = 8
+tasks_per_cpu = 60
+cpus = 16
 memory = 4 # in gigabytes
 
 sbatch_args = ' '.join([
