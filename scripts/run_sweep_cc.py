@@ -8,7 +8,7 @@ memory = 4 # in gigabytes
 
 sbatch_args = ' '.join([
     # use martha's resource allocation account
-    '--account=def-whitem',
+    '--account=def-amw8',
     # largest time allotment for fastest scheduling group
     '--time=2:59:00',
     # number of cores to request
@@ -52,10 +52,9 @@ for jobs in bundle(range(0, num - 1), tasks_per_cpu * cpus):
     runs = ' '.join(map(str, jobs))
     parallel = f'parallel -j{cpus} --delay 1 srun -N1 -n1 python parameter_sweep.py -e {args.e} -r {args.r} -b {args.b} -i ::: {runs}'
 
-    slurm_file = f'''
-    #!/bin/bash
-    cd {cwd}
-    {parallel}
+    slurm_file = f'''#!/bin/bash
+cd {cwd}
+{parallel}
     '''
 
     with open('auto_slurm.sh', 'w') as f:
