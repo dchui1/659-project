@@ -1,6 +1,6 @@
 {
     "name": "linear",
-    "agent": "linear-q-TdistR",
+    "agent": "T-distribution-r linear-q",
     "environment": "cts-gridworld",
     "metaParameters": {
         "tiles": 2,
