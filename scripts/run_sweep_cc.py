@@ -10,13 +10,17 @@ sbatch_args = ' '.join([
     # use martha's resource allocation account
     '--account=def-amw8',
     # largest time allotment for fastest scheduling group
-    '--time=2:59:00',
+    '--time=5:59:00',
     # number of cores to request
     f'--ntasks={cpus}',
     # amount of memory each core will need
     f'--mem-per-cpu={memory}G',
     # location to put the log files
     f'--output=$SCRATCH/job_output_\%j.txt',
+    # email option,
+    f'--mail-type=ALL',
+    # email
+    f'--mail-user=parash@ualberta.ca'
 ])
 
 def parse_args():
