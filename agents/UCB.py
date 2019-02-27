@@ -21,4 +21,4 @@ class UCB(TabularQ):
         n = self.N[s_idx, a]
         bonus = self.c * np.sqrt(np.log(self.steps) / n)
 
-        super().update(s, sp, r, bonus, a, done)
+        super().update(s, sp, r + bonus, a, done)
