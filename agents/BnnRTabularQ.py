@@ -24,7 +24,7 @@ class BnnRTabularQ(TabularQ):
 
         bonus = np.max(samples) - np.mean(samples)
         # print("B bonus", bonus, np.max(samples), np.mean(samples))
-        super().update(s, sp, r, bonus, a, done)
+        super().update(s, sp, r + bonus, a, done)
 
     def generate_input(self, s, a):
 
