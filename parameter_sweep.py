@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ExperimentDescription import ExperimentDescription
 import utils.registry as registry
+from pickle import dump
 
 def runExperiment(env, num_episodes, agent):
   total_reward = 0
@@ -82,3 +83,6 @@ path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()
 os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
     f.write(str(meanResult))
+
+with open(f'{path}/results.pkl', 'wb') as f:
+    dump({"results": (rewards, stderr)}, f)
