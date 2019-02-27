@@ -54,7 +54,7 @@ num = exp.num_permutations * args.r
 
 for jobs in bundle(range(0, num - 1), tasks_per_cpu * cpus):
     runs = ' '.join(map(str, jobs))
-    parallel = f'parallel -j{cpus} --delay 1 srun -N1 -n1 python parameter_sweep.py -e {args.e} -r {args.r} -b {args.b} -i ::: {runs}'
+    parallel = f'parallel -j{cpus} --delay 1 srun -N1 -n1 python parameter_sweep.py -e {args.e} -b {args.b} -i ::: {runs}'
 
     slurm_file = f'''#!/bin/bash
 cd {cwd}
