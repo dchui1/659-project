@@ -46,7 +46,7 @@ def bundle(it, num):
 args = parse_args()
 cwd = os.getcwd()
 exp = ExperimentDescription(args.e, 0, args.r)
-num = exp.num_permutations
+num = exp.num_permutations * args.r
 
 for jobs in bundle(range(0, num - 1), tasks_per_cpu * cpus):
     runs = ' '.join(map(str, jobs))

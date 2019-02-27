@@ -21,7 +21,7 @@ def parse_args():
 
 args = parse_args()
 exp = ExperimentDescription(args.e, 0, args.r)
-num = exp.num_permutations
+num = exp.num_permutations * args.r
 
 runs = '{0..' + str(num-1) + '}'
 
