@@ -25,13 +25,14 @@ class BayesianApproximator():
 class TDistBayesianApproximation(BayesianApproximator):
     def __init__(self, state_dimensions, num_acts, params):
         super().__init__(state_dimensions, num_acts)
-        ig_prior = InverseGamma(
-            params["ig_prior_shape"], params["ig_prior_scale"]
-        )  # prior shape and scale. A large scale means the data is more broad.
+        ig_prior = InverseGamma.from_log_mode_and_log_shape(
+            tf.log(params["ig_prior_mode"]), tf.log(params["ig_prior_shape"]))
+        # prior shape and scale. A large scale means the data is more broad.
         num_dims = np.square(params["tiles"]) * params["tilings"] * num_acts
         normal_prior = MultivariateNormal.from_shared_mean_and_log_precision(
             params["normal_prior_mean"],
-            params["normal_prior_log_precision"],   # small precision = large variance
+            params[
+                "normal_prior_log_precision"],  # small precision = large variance
             num_dims=num_dims)
         self.mnig_prior = MultivariateNormalInverseGamma(
             normal_prior, ig_prior)
@@ -43,12 +44,12 @@ class TDistBayesianApproximation(BayesianApproximator):
 
     def sample(self, x, num_samples):
         weights = self.T_distribution.sample(num_samples)
-        return tf.matmul(weights, x.astype('float32'), transpose_b=True).numpy()
-
+        return tf.matmul(
+            weights, x.astype('float32'), transpose_b=True).numpy()
 
 
 class TabularBayesianApproximation(BayesianApproximator):
-  def __init__(self, state_dimensions, num_acts):
+    def __init__(self, state_dimensions, num_acts):
         super().__init__(state_dimensions, num_acts)
         num_states = np.prod(state_dimensions)
         self.state_shape = state_dimensions
@@ -60,18 +61,20 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.B[:] = [1, 1, 2, 1]
         self.action_var = [np.zeros(num_states)] * num_acts
 
-  def update_stats(self, x, val=0.0): # the default of the new value is 0 for exploration bonuses
-    mu, nu, alpha, beta = self.B[x, :]
-    self.B[x, 0] = (nu * mu + val) / (nu + 1)
-    self.B[x, 1] = nu + 1
-    self.B[x, 2] = alpha + 1.0/2.0
-    self.B[x, 3] = (nu / (nu + 1.0)) * math.pow((val - mu), 2.0) / 2.0
+    def update_stats(
+            self, x, val=0.0
+    ):  # the default of the new value is 0 for exploration bonuses
+        mu, nu, alpha, beta = self.B[x, :]
+        self.B[x, 0] = (nu * mu + val) / (nu + 1)
+        self.B[x, 1] = nu + 1
+        self.B[x, 2] = alpha + 1.0 / 2.0
+        self.B[x, 3] = (nu / (nu + 1.0)) * math.pow((val - mu), 2.0) / 2.0
 
-  def sample(self, x, n, use_stddev=False):
-    mu, nu, alpha, beta = self.B[x, :]
-    scale = beta * (nu + 1)/(alpha * nu)
-    df = 2 * alpha
-    r = t.rvs(df=df, loc=mu, scale=scale, size=n)
-    bonus = max(np.append(r, 0.0)) - np.average(r)
-    # mean, var, skew, kurt = t.stats(df=df, loc=mu, scale=scale, moments='mvsk')
-    return [bonus]
+    def sample(self, x, n, use_stddev=False):
+        mu, nu, alpha, beta = self.B[x, :]
+        scale = beta * (nu + 1) / (alpha * nu)
+        df = 2 * alpha
+        r = t.rvs(df=df, loc=mu, scale=scale, size=n)
+        bonus = max(np.append(r, 0.0)) - np.average(r)
+        # mean, var, skew, kurt = t.stats(df=df, loc=mu, scale=scale, moments='mvsk')
+        return [bonus]
