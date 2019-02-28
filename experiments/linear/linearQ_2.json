@@ -3,8 +3,8 @@
     "agent": "linear-q",
     "environment": "cts-gridworld",
     "metaParameters": {
-        "tiles": [4],
-        "tilings": [8, 16],
+        "tiles": [30],
+        "tilings": [1],
         "alpha": [0.025, 0.05, 0.1, 0.2, 0.4],
         "epsilon": [0.05, 0.1, 0.15, 0.2],
         "gamma": 0.9
