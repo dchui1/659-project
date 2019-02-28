@@ -25,6 +25,6 @@ num = exp.num_permutations * args.r
 
 runs = '{0..' + str(num-1) + '}'
 
-parallel = f'parallel -j{cpus} python parameter_sweep.py -e {args.e} -r {args.r} -b {args.b} -i ::: {runs}'
+parallel = f'parallel -j{cpus} python parameter_sweep.py -e {args.e} -b {args.b} -i ::: {runs}'
 print(parallel)
 process = subprocess.run(parallel, stdout=subprocess.PIPE, shell=True, executable='/bin/zsh')
