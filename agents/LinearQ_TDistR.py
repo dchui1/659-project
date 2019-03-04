@@ -8,12 +8,16 @@ class TDistRLinearQ(LinearQ):
         super().__init__(state_shape, num_acts, params)
         # create mnig_prior: whose parameters come through params
         self.rewardApprox = TDistBayesianApproximation(state_shape, num_acts, params)
+        self.data = []
+        self.reward_data = []
 
     def update(self, s, sp, r, a, done):
         x = self.tc.representation(s, a)\
             .array()
         x_mat = x.reshape(1, len(x))
         r_mat = np.array([[r]])
+        self.data.append(x_mat)
+        self.reward_data.append(r_mat)
         self.rewardApprox.update_stats(x_mat, r_mat)
         samples = self.rewardApprox.sample(x_mat, self.params["num_samples"])
         bonus = np.max(samples) - np.mean(samples)

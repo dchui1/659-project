@@ -18,12 +18,25 @@ import matplotlib.pyplot as plt
 from bayesianapproximator import *
 from BNNApproximation import BNNApproximation
 from ExperimentDescription import ExperimentDescription
+from bayesianapproximator import TDistBayesianApproximation
 import utils.registry as registry
 from pickle import dump
 tf.enable_eager_execution()
 
 
-def runExperiment(env, num_episodes, agent):
+def check_algebra(X):
+    size = X.shape
+    Xt = np.transpose(X)
+    XtX = Xt @ X
+    XtX_inv = np.linalg.inv(XtX)
+    Z = X @ np.transpose(XtX_inv) @ Xt
+    # Id = np.eye(size[0])
+    min_el = np.min(Z)
+    max_el = np.max(Z)
+    return (min_el, max_el)
+
+
+def runExperiment(env, num_episodes, agent, agent_factory):
     total_reward = 0
     rewards = []
     steps = []
@@ -37,11 +50,56 @@ def runExperiment(env, num_episodes, agent):
         while not done:
             (sp, r, done, __) = env.step(
                 a)  # Note: the environment "registers" the new sp as env.pos
-            agent.update(s, sp, r, a, done)
+            try:
+                agent.update(s, sp, r, a, done)
+            except ArithmeticError:
+                print("Arithmetic exception raised.")
+                print("Episode", episode, " Step", step)
+                data_mat = np.vstack(agent.data)
+                rewards_mat = np.vstack(agent.reward_data)
+                print("data_mat.shape and rewards_mat.shape:")
+                print(data_mat.shape)
+                print(rewards_mat.shape)
+
+                min_element = np.min(data_mat)
+                max_element = np.max(data_mat)
+                print("min and max element of data_mat:")
+                print(min_element)
+                print(max_element)
+                # min_Z, max_Z = check_algebra(data_mat)
+                # print("")
+                # print(min_Z)
+                # print(max_Z)
+                new_agent = agent_factory()
+
+                new_agent.rewardApprox.update_stats(data_mat[:-1],
+                                                    rewards_mat[:-1])
+                print("parameters of normal and ig disributions:")
+                normal_covariance = new_agent.rewardApprox.T_distribution.mnig_prior.normal_prior.covariance_scale
+                normal_precision = new_agent.rewardApprox.T_distribution.mnig_prior.normal_prior.precision
+                ig_scale = new_agent.rewardApprox.T_distribution.mnig_prior.ig_prior.scale
+                ig_shape = new_agent.rewardApprox.T_distribution.mnig_prior.ig_prior.shape
+
+                print(normal_covariance)
+                print(normal_precision)
+                print(ig_scale)
+                print(ig_shape)
+
+                data_dict = {
+                    'normal_covariance': normal_covariance,
+                    'normal_precision': normal_precision,
+                    'ig_scale': ig_scale,
+                    'ig_shape': ig_shape,
+                    'X': data_mat[:-1],
+                    'y': rewards_mat[:-1]
+                }
+
+                np.save("tmp/debugging", data_dict)
+                exit()
 
             s = sp  # update the current state to sp
-            ac_vals = agent.action_values(s)
-            print(ac_vals)
+            # ac_vals = agent.action_values(s)
+            # print(ac_vals)
             a = agent.getAction(s)  # update the current action to a
             # print("State action pair", s, a)
             total_reward += r
@@ -53,7 +111,7 @@ def runExperiment(env, num_episodes, agent):
             #     plt.savefig(f'figs/heat_map.{ss)tep}.{a}.png')
 
         steps.append(step)
-        print("Episode", episode, " Step", step)
+        # print("Episode", episode, " Step", step)
         # agent.print()
 
     return (steps, rewards)
@@ -65,10 +123,17 @@ def averageOverRuns(Agent, Env, exp):
     for run in range(exp.runs):
         env = Env(exp.env_params)
         np.random.seed(run)
+        tf.random.set_random_seed(run)
         random.seed(run)
         agent = Agent(env.observationShape(), env.numActions(),
                       exp.meta_parameters)
-        (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
+
+        def agent_factory():
+            return Agent(env.observationShape(), env.numActions(),
+                         exp.meta_parameters)
+
+        (steps, r) = runExperiment(env, exp.env_params['episodes'], agent,
+                                   agent_factory)
         rewards.append(r)
         print("Completed a run")
         total_steps.append(steps)
@@ -123,7 +188,6 @@ print("here")
 fig = plt.figure()
 ax = plt.axes()
 plotRewards(ax, rewards, stderr, "LinearQ_TDistR")
-
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)

@@ -9,3 +9,5 @@ results/
 sparse/build
 
 figs/
+
+tmp/
