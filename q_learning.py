@@ -90,8 +90,8 @@ def runExperiment(env, num_episodes, agent, agent_factory):
                     'normal_precision': normal_precision,
                     'ig_scale': ig_scale,
                     'ig_shape': ig_shape,
-                    'X': data_mat[:-1],
-                    'y': rewards_mat[:-1]
+                    'X': data_mat,
+                    'y': rewards_mat
                 }
 
                 np.save("tmp/debugging", data_dict)
