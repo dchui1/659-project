@@ -26,8 +26,9 @@ class BNNApproximation(BayesianApproximator):
         # print("The input vector shape", input_vector.shape)
         # print("The input vector", input_vector)
 
-
-        self.bnn.fit(np.array([[x]]), np.array([[val]]), batch_size=batch_size, epochs=epochs, verbose=0)
+        self.bnn.fit(x.reshape(1, len(x)), np.array([[val]]), batch_size=batch_size, epochs=epochs, verbose=0)
+        for layer in self.bnn.layers:
+            print(layer.get_weights())
 
 
     def sample(self, x, n):
@@ -39,5 +40,5 @@ class BNNApproximation(BayesianApproximator):
         # input_vector = np.concatenate((s, a))
 
 
-        predictions = [self.bnn.predict(np.array([[x]], dtype=np.float32)) for i in range(n)]
+        predictions = np.array([self.bnn.predict(x.reshape(1, len(x)))[0, 0] for i in range(n)])
         return predictions

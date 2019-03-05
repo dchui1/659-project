@@ -12,18 +12,20 @@ class BnnRTabularQ(TabularQ):
         blr_alpha = params['blr_alpha']
         self.rewardApprox = BNNApproximation(state_shape, num_acts,
                                 log_divergence_weight, prior_stddev, blr_alpha)
-        self.epsilon = 0.05
-        self.rewardSamples = 10
+        self.rewardSamples = 100
         self.epochs = params['epochs']
 
     def update(self, s, sp, r, a, done):
         # x = np.concatenate((self.convert_state(s),self.convert_action(a)))
         x = self.generate_input(s, a)
-        self.rewardApprox.update_stats(x, r, epochs=self.epochs)
-        samples = self.rewardApprox.sample(x, self.rewardSamples)
+        self.rewardApprox.update_stats(x.flatten(), r, epochs=self.epochs)
+        samples = self.rewardApprox.sample(x.flatten(), self.rewardSamples)
 
-        bonus = np.max(samples) - np.mean(samples)
-        # print("B bonus", bonus, np.max(samples), np.mean(samples))
+        quantile_idx = 3 * (self.rewardSamples // 4) # get the index of the 3rd quantile
+        samples.sort()
+        bonus = samples[quantile_idx] - np.mean(samples)
+
+        print("B bonus", bonus, samples[quantile_idx], np.mean(samples))
         super().update(s, sp, r + bonus, a, done)
 
     def generate_input(self, s, a):
