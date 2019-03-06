@@ -118,8 +118,8 @@ if __name__ == "__main__":
     # run model
     f = BNN(3)
     s = f.sample(np.array([[1., 0., 0.]]))
-    print(np.mean(s), np.std(s)**2)
-    print(f.layers.get_weights())
+    print("Untrained mean and std", np.mean(s), np.std(s)**2)
+    print("Weights", f.layers.get_weights())
     f.fit(x, y, epochs=100)
     s = f.sample(np.array([[1., 0., 0.]]))
     print(np.mean(s), np.std(s)**2)

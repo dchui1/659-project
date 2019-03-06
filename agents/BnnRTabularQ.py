@@ -10,15 +10,14 @@ class BnnRTabularQ(TabularQ):
         log_divergence_weight = params['log_divergence_weight']
         prior_stddev = params['prior_stddev']
         blr_alpha = params['blr_alpha']
-        self.rewardApprox = BNNApproximation(state_shape, num_acts,
-                                log_divergence_weight, prior_stddev, blr_alpha)
+        self.rewardApprox = BNNApproximation(state_shape, num_acts)
         self.rewardSamples = 100
         self.epochs = params['epochs']
 
     def update(self, s, sp, r, a, done):
         # x = np.concatenate((self.convert_state(s),self.convert_action(a)))
         x = self.generate_input(s, a)
-        self.rewardApprox.update_stats(x.flatten(), r, epochs=self.epochs)
+        self.rewardApprox.update_stats(x.flatten(), np.array([r]), epochs=self.epochs)
         samples = self.rewardApprox.sample(x.flatten(), self.rewardSamples)
 
         # If the max doesn't work out, we could also consider taking quantiles
