@@ -14,9 +14,9 @@ import argparse
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from bayesianapproximator import *
-from BNNApproximation import BNNApproximation
-from ExperimentDescription import ExperimentDescription
+from utils.bayesianapproximator import *
+from utils.BNNApproximation import BNNApproximation
+from utils.ExperimentDescription import ExperimentDescription
 import utils.registry as registry
 from pickle import dump
 

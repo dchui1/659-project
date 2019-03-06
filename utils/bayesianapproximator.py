@@ -4,9 +4,8 @@ import math
 import scipy
 from scipy.stats import t
 import matplotlib.pyplot as plt
-from tf_supervised_inference.distributions import T, \
-    MultivariateNormalInverseGamma, InverseGamma, MultivariateNormal
-from tf_supervised_inference.linear_model import LinearModel
+from utils.tf_supervised_inference.distributions import T, MultivariateNormalInverseGamma, InverseGamma, MultivariateNormal
+from utils.tf_supervised_inference.linear_model import LinearModel
 
 
 class BayesianApproximator():

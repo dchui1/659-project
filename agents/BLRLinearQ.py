@@ -1,6 +1,6 @@
 import numpy as np
 from agents.LinearQ import LinearQ
-from BNNApproximation import BNNApproximation
+from utils.BNNApproximation import BNNApproximation
 
 class BLRLinearQ(LinearQ):
     def __init__(self, state_shape, num_acts, params):
