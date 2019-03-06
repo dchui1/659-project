@@ -21,11 +21,10 @@ class BnnRTabularQ(TabularQ):
         self.rewardApprox.update_stats(x.flatten(), r, epochs=self.epochs)
         samples = self.rewardApprox.sample(x.flatten(), self.rewardSamples)
 
+        # If the max doesn't work out, we could also consider taking quantiles
         quantile_idx = 3 * (self.rewardSamples // 4) # get the index of the 3rd quantile
-        samples.sort()
         bonus = samples[quantile_idx] - np.mean(samples)
 
-        print("B bonus", bonus, samples[quantile_idx], np.mean(samples))
         super().update(s, sp, r + bonus, a, done)
 
     def generate_input(self, s, a):
