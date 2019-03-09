@@ -4,19 +4,19 @@
     "environment": "cts-gridworld",
     "metaParameters": {
         "tiles": 2,
-        "tilings": 8,
+        "tilings": 1,
         "alpha": [0.1, 0.2, 0.4, 0.8],
         "epsilon": [0.05, 0.1],
         "gamma": 0.9,
         "ig_prior_shape": [0.1, 0.2, 0.3],
         "ig_prior_mode": 1.0,
         "normal_prior_mean": 0.0,
-        "normal_prior_log_precision": [-0.01, 0.05, 0.1, 0.15],
+        "normal_prior_log_precision": -0.01,
         "num_samples" : 10
     },
     "envParameters": {
-        "stepsize": 0.05,
-        "steps": 700,
-        "episodes": 1000
+      "stepsize": 0.1,
+      "steps": 700,
+      "episodes": 1000
     }
 }

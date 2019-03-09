@@ -6,14 +6,14 @@ class CtsGridWorld(Environment):
     _y = 0
 
     steps = 0
-    noise = 0.01
+    noise = 0.00
 
     def __init__(self, params):
         self.maxSteps = params['steps']
         self.stepSize = params['stepsize']
 
     def getReward(self):
-        if self._x + self.stepSize >= 1 and self._y + self.stepSize >= 1:
+        if self._x == 1 and self._y == 1:
             return 1
         return 0
 
