@@ -47,34 +47,114 @@ class TDistBayesianApproximation(BayesianApproximator):
         return tf.matmul(
             weights, x.astype('float32'), transpose_b=True).numpy()
 
-
+# The following class implements a global IG distribution (univariate)
 class TabularBayesianApproximation(BayesianApproximator):
     def __init__(self, state_dimensions, num_acts):
         super().__init__(state_dimensions, num_acts)
         num_states = np.prod(state_dimensions)
         self.state_shape = state_dimensions
-        self.B = np.zeros((num_states * num_acts, 4))
-        # prior sample mean
-        # prior "observations to make that mean"
-        # prior "observations to make our variance" # try to make it hard to reduce this
-        # prior sum of square errors (proportional to initial sample variance)
-        self.B[:] = [1, 1, 2, 1]
-        self.action_var = [np.zeros(num_states)] * num_acts
+        self.alpha_0 = 0.1
+        self.beta_0 = 1.0
+        self.nu_0 = 1.0
+        self.mu_0 = 0.0
 
-    def update_stats(
-            self, x, val=0.0
-    ):  # the default of the new value is 0 for exploration bonuses
-        mu, nu, alpha, beta = self.B[x, :]
-        self.B[x, 0] = (nu * mu + val) / (nu + 1)
-        self.B[x, 1] = nu + 1
-        self.B[x, 2] = alpha + 1.0 / 2.0
-        self.B[x, 3] = (nu / (nu + 1.0)) * math.pow((val - mu), 2.0) / 2.0
+        self.n = np.zeros(
+            (num_states * num_acts))  #[0] * num_states * num_acts
+        self.empirical_mean = np.zeros(
+            (num_states * num_acts))  # [0] * num_states * num_acts
+        self.global_sum_sq = 0.0
+
+    def update_stats(self, x, val=0.0):
+        self.n[x] += 1  # local count
+        self.empirical_mean[x] += (val - self.empirical_mean[x]) / self.n[x]
+        self.global_sum_sq += np.square(val)
+
+    def posterior_global_beta(self):
+        return self.beta_0 + 0.5 * (
+            self.global_sum_sq -
+            self.global_n() * np.square(self.global_empirical_mean())) + (
+                self.global_n() * self.nu_0) / (self.nu_0 + self.global_n(
+                )) * 0.5 * np.square(self.global_empirical_mean() - self.mu_0)
+
+    def global_empirical_mean(self):
+        return np.mean(self.empirical_mean)
+
+    def posterior_mean(self, x):
+        return (self.nu_0 * self.mu_0 +
+                self.n[x] * self.empirical_mean[x]) / self.posterior_nu(x)
+
+    def posterior_global_alpha(self):
+        return self.alpha_0 + self.global_n() / 2
+
+    def posterior_nu(self, x):
+        return self.nu_0 + self.n[x]
+
+    def global_n(self):
+        return np.sum(self.n)
 
     def sample(self, x, n, use_stddev=False):
-        mu, nu, alpha, beta = self.B[x, :]
-        scale = beta * (nu + 1) / (alpha * nu)
+        mu = self.posterior_mean(x)
+        nu = self.posterior_nu(x)
+        alpha = self.posterior_global_alpha()
+        scale = max(0, self.posterior_global_beta() * (nu + 1) / (alpha * nu))
         df = 2 * alpha
-        r = t.rvs(df=df, loc=mu, scale=scale, size=n)
-        bonus = max(np.append(r, 0.0)) - np.average(r)
-        # mean, var, skew, kurt = t.stats(df=df, loc=mu, scale=scale, moments='mvsk')
-        return [bonus]
+        try:
+            r = t.rvs(df=df, loc=mu, scale=scale, size=n)
+        except:
+            print(scale)
+            exit()
+        bonus = np.maximum(r, 0.0) - np.average(r)
+        return bonus
+
+# The following class implements a local IG distribution (multivariate)
+class TabularBayesianApproximation2(BayesianApproximator):
+    def __init__(self, state_dimensions, num_acts):
+        super().__init__(state_dimensions, num_acts)
+        num_states = np.prod(state_dimensions)
+        self.state_shape = state_dimensions
+        self.alpha_0 = 0.1
+        self.beta_0 = 1.0
+        self.nu_0 = 1.0
+        self.mu_0 = 0.0
+
+        self.n = np.zeros(
+            (num_states * num_acts))  #[0] * num_states * num_acts
+        self.empirical_mean = np.zeros(
+            (num_states * num_acts))  # [0] * num_states * num_acts
+        self.local_sum_sq = np.zeros((num_states * num_acts))
+
+    def update_stats(self, x, val=0.0):
+        self.n[x] += 1  # local count
+        self.empirical_mean[x] += (val - self.empirical_mean[x]) / self.n[x]
+        self.local_sum_sq[x] += np.square(val)
+
+    def posterior_local_beta(self, x):
+        return self.beta_0 + 0.5 * (
+            self.local_sum_sq[x] - self.n[x] * np.square(
+                self.empirical_mean[x])) + (self.n[x] * self.nu_0) / (
+                    self.nu_0 + self.n[x]
+                ) * 0.5 * np.square(self.empirical_mean[x] - self.mu_0)
+
+    def posterior_local_mean(self, x):
+        return (self.nu_0 * self.mu_0 +
+                self.n[x] * self.empirical_mean[x]) / self.posterior_nu(x)
+
+    def posterior_local_alpha(self, x):
+        return self.alpha_0 + self.n[x] / 2
+
+    def posterior_nu(self, x):
+        return self.nu_0 + self.n[x]
+
+    def sample(self, x, n, use_stddev=False):
+        mu = self.posterior_local_mean(x)
+        nu = self.posterior_nu(x)
+        alpha = self.posterior_local_alpha(x)
+        scale = max(0, self.posterior_local_beta(x) * (nu + 1) / (alpha * nu))
+        df = 2 * alpha
+        try:
+            r = t.rvs(df=df, loc=mu, scale=scale, size=n)
+        except:
+            print(scale)
+            exit()
+        bonus = np.maximum(r, 0.0) - np.average(r)
+        return bonus

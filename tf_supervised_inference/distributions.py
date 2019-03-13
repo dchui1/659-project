@@ -41,9 +41,7 @@ class T(object):
             transpose_b=True)
         return weights
 
-    def next(
-            self, x, y
-    ):  # "x" represents the (s, a) pair, "y" represents the observed reward
+    def next(self, x, y):  # "x" represents the (s, a) pair, "y" represents the observed reward
         mnig_posterior = self.mnig_prior.next(x, y)
         return self.__class__(mnig_posterior)
 
@@ -179,6 +177,7 @@ class MultivariateNormalInverseGamma(object):
         yty = tf.matmul(y, y, transpose_a=True, name='yty')
         sse_estimate = tf.squeeze(self.normal_prior.quadratic_form + yty -
                                   normal_posterior.quadratic_form)
+
         ig_posterior = self.ig_prior.next(
             tf.cast(tf.shape(x)[0], tf.float32), sse_estimate)
 

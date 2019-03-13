@@ -61,45 +61,46 @@ def runExperiment(env, num_episodes, agent, agent_factory):
         while not done:
             (sp, r, done, __) = env.step(a)
             total_steps.append(total_steps[-1] + 1)
-            try:
-                agent.update(s, sp, r, a, done)
-                # normal_covariance = agent.rewardApprox.T_distribution.mnig_prior.normal_prior.covariance_scale.numpy()
-                # ig_scale = agent.rewardApprox.T_distribution.mnig_prior.ig_prior.scale.numpy()
-                # scales_BLR.append(ig_scale)
-                #
-                # assert(is_diagonal(normal_covariance))
-                # max_var = max(np.diag(normal_covariance))
-                # variances_BLR.append(max_var)
-
-            except ArithmeticError:
-                print("Arithmetic exception raised.")
-                print("Episode", episode, " Step", step)
-                data_mat = np.vstack(agent.data)
-                rewards_mat = np.vstack(agent.reward_data)
-
-                new_agent = agent_factory()
-                new_agent.rewardApprox.update_stats(data_mat, rewards_mat)
-                normal_covariance = new_agent.rewardApprox.T_distribution.mnig_prior.normal_prior.covariance_scale.numpy()
-                normal_precision = new_agent.rewardApprox.T_distribution.mnig_prior.normal_prior.precision.numpy()
-                ig_scale = new_agent.rewardApprox.T_distribution.mnig_prior.ig_prior.scale.numpy()
-                ig_shape = new_agent.rewardApprox.T_distribution.mnig_prior.ig_prior.shape.numpy()
-
-                scales_BLR.append(ig_scale)
-                assert(is_diagonal(normal_covariance))
-                max_var = max(np.diag(normal_covariance))
-                variances_BLR.append(max_var)
-
-                data_dict = {
-                    'normal_covariance': normal_covariance,
-                    'normal_precision': normal_precision,
-                    'ig_scale': ig_scale,
-                    'ig_shape': ig_shape,
-                    'X': data_mat,
-                    'y': rewards_mat
-                }
-
-                np.save("tmp/debugging", data_dict)
-                exit()
+            agent.update(s, sp, r, a, done)
+            # try:
+            #     agent.update(s, sp, r, a, done)
+            #     # normal_covariance = agent.rewardApprox.T_distribution.mnig_prior.normal_prior.covariance_scale.numpy()
+            #     # ig_scale = agent.rewardApprox.T_distribution.mnig_prior.ig_prior.scale.numpy()
+            #     # scales_BLR.append(ig_scale)
+            #     #
+            #     # assert(is_diagonal(normal_covariance))
+            #     # max_var = max(np.diag(normal_covariance))
+            #     # variances_BLR.append(max_var)
+            #
+            # except ArithmeticError:
+            #     print("Arithmetic exception raised.")
+            #     print("Episode", episode, " Step", step)
+            #     data_mat = np.vstack(agent.data)
+            #     rewards_mat = np.vstack(agent.reward_data)
+            #
+            #     new_agent = agent_factory()
+            #     new_agent.rewardApprox.update_stats(data_mat, rewards_mat)
+            #     normal_covariance = new_agent.rewardApprox.T_distribution.mnig_prior.normal_prior.covariance_scale.numpy()
+            #     normal_precision = new_agent.rewardApprox.T_distribution.mnig_prior.normal_prior.precision.numpy()
+            #     ig_scale = new_agent.rewardApprox.T_distribution.mnig_prior.ig_prior.scale.numpy()
+            #     ig_shape = new_agent.rewardApprox.T_distribution.mnig_prior.ig_prior.shape.numpy()
+            #
+            #     scales_BLR.append(ig_scale)
+            #     assert (is_diagonal(normal_covariance))
+            #     max_var = max(np.diag(normal_covariance))
+            #     variances_BLR.append(max_var)
+            #
+            #     data_dict = {
+            #         'normal_covariance': normal_covariance,
+            #         'normal_precision': normal_precision,
+            #         'ig_scale': ig_scale,
+            #         'ig_shape': ig_shape,
+            #         'X': data_mat,
+            #         'y': rewards_mat
+            #     }
+            #
+            #     np.save("tmp/debugging", data_dict)
+            #     exit()
 
             s = sp
             # ac_vals = agent.action_values(s)
@@ -114,16 +115,13 @@ def runExperiment(env, num_episodes, agent, agent_factory):
             #     plt.savefig(f'figs/heat_map.{ss)tep}.{a}.png')
 
         steps.append(step)
-        # print("Episode", episode, " Step", step)
 
-    data_mat = np.vstack(agent.data)
-    rewards_mat = np.vstack(agent.reward_data)
-    data_dict = {
-        'X': data_mat,
-        'y': rewards_mat
-    }
+        print("Episode", episode, " Step", step)
 
-    np.save("tmp/debugging_Xy_TabularAgent", data_dict)
+    # data_mat = np.vstack(agent.data)
+    # rewards_mat = np.vstack(agent.reward_data)
+    # data_dict = {'X': data_mat, 'y': rewards_mat}
+    # np.save("tmp/debugging_Xy_TabularAgent", data_dict)
 
     return (steps, rewards, total_steps[1:], variances_BLR, scales_BLR)
 
@@ -138,16 +136,19 @@ def averageOverRuns(Agent, Env, exp):
         random.seed(run)
         agent = Agent(env.observationShape(), env.numActions(),
                       exp.meta_parameters)
+
         def agent_factory():
             return Agent(env.observationShape(), env.numActions(),
                          exp.meta_parameters)
 
-        (steps, r, ts, variances, ig_scale) = runExperiment(env, exp.env_params['episodes'], agent,
-                                   agent_factory)
+        (steps, r, ts, variances, ig_scale) = runExperiment(
+            env, exp.env_params['episodes'], agent, agent_factory)
         rewards.append(r)
         print("Completed a run")
         total_steps.append(steps)
-
+    min_step = min(steps)
+    print("min_step = ")
+    print(min_step)
     metric = np.array(total_steps)
     mean = metric.mean(axis=0)
     stderr = metric.std(axis=0) / np.sqrt(exp.runs)
@@ -193,18 +194,12 @@ Agent = registry.getAgent(exp)
 
 (rewards, stderr, ts, var, ig_scale) = averageOverRuns(Agent, Env, exp)
 
-
 fig = plt.figure()
 ax = plt.axes()
-plotRewards(ax, rewards, stderr, "LinearQ_TdistR")
+plotRewards(ax, rewards, stderr, "TabularRTabularQ")
 
-var_dict = {
-    'ts': ts,
-    'var': var,
-    'igsc': ig_scale
-}
-np.save("tmp/debugging_var1", var_dict)
-
+# var_dict = {'ts': ts, 'var': var, 'igsc': ig_scale}
+# np.save("tmp/debugging_var1", var_dict)
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)

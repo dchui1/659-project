@@ -8,8 +8,8 @@
         "gamma": 0.9
     },
     "envParameters": {
-        "shape": [30, 30],
+        "shape": [10, 10],
         "steps": 700,
-        "episodes": 1300
+        "episodes": 1000
     }
 }
