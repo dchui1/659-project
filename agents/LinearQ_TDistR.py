@@ -15,6 +15,7 @@ class TDistRLinearQ(LinearQ):
         x = self.tc.representation(s, a)\
             .array()
         x_mat = x.reshape(1, len(x))
+        self.feature_vec = x.reshape(len(x), 1)
         r_mat = np.array([[r]])
         self.data.append(x_mat)
         self.reward_data.append(r_mat)

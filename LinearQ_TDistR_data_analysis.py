@@ -1,6 +1,6 @@
 import numpy as np
 
-
+# "normal_prior_log_precision": [-0.01, 0.05, 0.1, 0.15]
 data_dict = np.load('tmp/debugging.npy')
 X = data_dict.item().get('X')
 y = data_dict.item().get('y')
