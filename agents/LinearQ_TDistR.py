@@ -1,6 +1,6 @@
 import numpy as np
 from agents.LinearQ import LinearQ
-from bayesianapproximator import TDistBayesianApproximation
+from utils.bayesianapproximator import TDistBayesianApproximation
 
 
 class TDistRLinearQ(LinearQ):

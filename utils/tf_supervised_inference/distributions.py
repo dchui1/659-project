@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from itertools import product
-from tf_supervised_inference.linear_model import LinearModel
+from utils.tf_supervised_inference.linear_model import LinearModel
 from scipy.stats import t
 '''
 In order to create the T-distribution which will represent the Predicted Reward
