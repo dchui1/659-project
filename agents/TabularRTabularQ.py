@@ -12,6 +12,8 @@ class TabularRTabularQ(TabularQ):
         self.data = []
         self.reward_data = []
         self.state_shape = state_shape
+        self.alternative_action_bonuses = True
+
         # self.tc = SparseTC({
         #     'tiles': 2,
         #     'tilings': 1,
@@ -20,7 +22,15 @@ class TabularRTabularQ(TabularQ):
         # })
 
     def update(self, s, sp, r, a, done):
-        x = self.getIndex(s) + (a * self.num_states)
+        s_idx = self.getIndex(s)
+        if self.alternative_action_bonuses:
+            for action in range(self.num_acts):
+                if action != a:
+                    x = s_idx + (action * self.num_states)
+                    bonus_action = self.rewardApprox.sample(x, 50)
+                    self.Q[s_idx, action] = self.Q[s_idx, action] + self.alpha * bonus_action
+
+        x = s_idx + (a * self.num_states)
 
         # create data to be taken by the Tile Coder and stored
         # x_coord = s[0]/self.state_shape[0]
@@ -35,5 +45,5 @@ class TabularRTabularQ(TabularQ):
 
         self.rewardApprox.update_stats(x, r)
         samples = self.rewardApprox.sample(x, 50)
-        bonus = samples[0]
+        bonus = samples
         super().update(s, sp, r + bonus, a, done)
