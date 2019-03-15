@@ -48,7 +48,7 @@ class TDistBayesianApproximation(BayesianApproximator):
             weights, x.astype('float32'), transpose_b=True).numpy()
 
 # The following class implements a global IG distribution (univariate)
-class TabularBayesianApproximation(BayesianApproximator):
+class TabularBayesianApproximation2(BayesianApproximator):
     def __init__(self, state_dimensions, num_acts):
         super().__init__(state_dimensions, num_acts)
         num_states = np.prod(state_dimensions)
@@ -107,7 +107,7 @@ class TabularBayesianApproximation(BayesianApproximator):
         return bonus
 
 # The following class implements a local IG distribution (multivariate)
-class TabularBayesianApproximation2(BayesianApproximator):
+class TabularBayesianApproximation(BayesianApproximator):
     def __init__(self, state_dimensions, num_acts):
         super().__init__(state_dimensions, num_acts)
         num_states = np.prod(state_dimensions)
@@ -157,4 +157,5 @@ class TabularBayesianApproximation2(BayesianApproximator):
             print(scale)
             exit()
         bonus = np.maximum(r, 0.0) - np.average(r)
-        return bonus
+        return bonus.max()
+    # def sample_without_updating(self, x, n, use_stddev=False):
