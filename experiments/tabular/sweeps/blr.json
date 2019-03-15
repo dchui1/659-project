@@ -6,10 +6,10 @@
         "alpha": [0.1, 0.2, 0.4, 0.8],
         "epsilon": [0.05, 0.1, 0.15, 0.2],
         "gamma": 0.9,
-        "epochs": [1, 10],
-        "blr_alpha": [0.01, 0.05, 0.1, 0.25, 0.5],
-        "log_divergence_weight" :[-1, -5, -10],
-        "prior_stddev":[1, 0.5, 0.25]
+        "epochs": [10],
+        "blr_alpha": [0.01],
+        "log_divergence_weight" :[-100],
+        "prior_stddev":[0.25]
 
     },
     "envParameters": {

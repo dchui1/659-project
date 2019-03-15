@@ -11,7 +11,8 @@
         "ig_prior_shape": 0.2,
         "ig_prior_scale": 5.0,
         "normal_prior_mean": 0.0,
-        "normal_prior_log_precision": 0.1
+        "normal_prior_log_precision": 0.1,
+        "samples": 10
     },
     "envParameters": {
         "stepsize": 0.05,
