@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 import argparse
 import os
-from ExperimentDescription import ExperimentDescription
+from utils.ExperimentDescription import ExperimentDescription
 import utils.registry as registry
 
 
