@@ -1,6 +1,6 @@
 import numpy as np
 from agents.TabularQ import TabularQ
-from bayesianapproximator import TabularBayesianApproximation
+from utils.bayesianapproximator import TabularBayesianApproximation
 from utils.sparse import SparseTC
 
 

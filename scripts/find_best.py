@@ -1,6 +1,6 @@
 import argparse
 import os
-from ExperimentDescription import ExperimentDescription
+from utils.ExperimentDescription import ExperimentDescription
 
 def parse_args():
   parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")

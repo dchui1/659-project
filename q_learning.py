@@ -15,10 +15,10 @@ import os
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from bayesianapproximator import *
-from BNNApproximation import BNNApproximation
-from ExperimentDescription import ExperimentDescription
-from bayesianapproximator import TDistBayesianApproximation
+from utils.bayesianapproximator import *
+from utils.BNNApproximation import BNNApproximation
+from utils.ExperimentDescription import ExperimentDescription
+from utils.bayesianapproximator import TDistBayesianApproximation
 import utils.registry as registry
 from pickle import dump
 tf.enable_eager_execution()
