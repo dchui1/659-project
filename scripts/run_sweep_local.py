@@ -1,7 +1,7 @@
 import argparse
 import os
 import subprocess
-from ExperimentDescription import ExperimentDescription
+from utils.ExperimentDescription import ExperimentDescription
 
 cpus = 8
 

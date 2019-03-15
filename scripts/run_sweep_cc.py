@@ -1,6 +1,6 @@
 import argparse
 import os
-from ExperimentDescription import ExperimentDescription
+from utils.ExperimentDescription import ExperimentDescription
 
 tasks_per_cpu = 20
 cpus = 16

@@ -4,7 +4,7 @@ import argparse
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from ExperimentDescription import ExperimentDescription
+from utils.ExperimentDescription import ExperimentDescription
 import utils.registry as registry
 from pickle import dump
 

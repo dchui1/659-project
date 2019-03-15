@@ -1,8 +1,9 @@
 import numpy as np
-from BNN import BNN
+from utils.BNN import BNN
 import tensorflow as tf
-from bayesianapproximator import BayesianApproximator
+from utils.bayesianapproximator import BayesianApproximator
 from functools import reduce
+
 class BNNApproximation(BayesianApproximator):
 
     def __init__(self, state_dimensions, num_acts):

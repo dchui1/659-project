@@ -1,5 +1,5 @@
 import numpy as np
-from BNNApproximation import *
+from utils.BNNApproximation import *
 import math
 
 
