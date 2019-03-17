@@ -1,3 +1,6 @@
 [submodule "bayesian-exploration-results"]
 	path = bayesian-exploration-results
 	url = https://github.com/ParashRahman/bayesian-exploration-results/
+[submodule "gym-minigrid"]
+	path = gym-minigrid
+	url = https://github.com/maximecb/gym-minigrid
