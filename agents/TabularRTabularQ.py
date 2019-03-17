@@ -10,6 +10,5 @@ class TabularRTabularQ(TabularQ):
     def update(self, s, sp, r, a, done):
         x = self.getIndex(s) + (a * self.num_states)
         self.rewardApprox.update_stats(x, r)
-        samples = self.rewardApprox.sample(x, 100)
-        bonus = samples[0] # wouldn't this raise a type error?
+        bonus = self.rewardApprox.sample(x, 100)
         super().update(s, sp, r + bonus, a, done)
