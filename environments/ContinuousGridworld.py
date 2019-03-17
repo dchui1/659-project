@@ -110,7 +110,7 @@ class CtsGridWorld(Environment):
         cam_range = 1
 
         pos = np.zeros(2)
-        self.viewer.set_bounds(pos[0]-cam_range,pos[0]+cam_range,pos[1]-cam_range,pos[1]+cam_range)
+        self.viewer.set_bounds(pos[0],pos[0]+cam_range,pos[1],pos[1]+cam_range)
         # update geometry positions
         # for e, entity in enumerate(self.world.entities):
         #     self.render_geoms_xform[e].set_translation(*entity.state.p_pos)
