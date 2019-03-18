@@ -79,7 +79,7 @@ class CtsGridWorld(Environment):
             self.render_geoms = []
             self.render_geoms_xform = []
             # for entity in self.world.entities:
-            geom = rendering.make_circle(0.05)
+            geom = rendering.make_circle(self.stepSize)
             xform = rendering.Transform()
             # if 'agent' in entity.name:
             geom.set_color(*self.AGENT_COLOR, alpha=0.5)
@@ -89,7 +89,7 @@ class CtsGridWorld(Environment):
             self.render_geoms.append(geom)
             self.render_geoms_xform.append(xform)
 
-            goal = rendering.make_circle(0.05)
+            goal = rendering.make_circle(self.stepSize)
             goal_xform = rendering.Transform()
             goal.set_color(*self.GOAL_COLOR)
             goal.add_attr(goal_xform)
