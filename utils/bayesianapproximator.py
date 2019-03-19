@@ -49,7 +49,7 @@ class TDistBayesianApproximation(BayesianApproximator):
         ]
 
 
-class TabularBayesianApproximation(BayesianApproximator):
+class TabularBayesianApproximation_nstep_update(BayesianApproximator):
     def __init__(self, state_dimensions, num_acts):
         super().__init__(state_dimensions, num_acts)
         num_states = np.prod(state_dimensions)
@@ -93,3 +93,37 @@ class TabularBayesianApproximation(BayesianApproximator):
             exit()
         bonus = np.maximum(r, 0.0) - np.average(r)
         return bonus.max()
+
+
+class TabularBayesianApproximation(BayesianApproximator):
+  def __init__(self, state_dimensions, num_acts):
+        super().__init__(state_dimensions, num_acts)
+        num_states = np.prod(state_dimensions)
+        self.state_shape = state_dimensions
+        self.B = np.zeros((num_states * num_acts, 4))
+        self.mu_0 = 1.0  # prior sample mean
+        self.nu_0 = 1.0  # prior "observations that make the prior mean"
+        self.alpha_0 = 0.1  # prior IG shape
+        self.beta_0 = 1.0  # prior IG scale
+
+        self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0]
+        self.action_var = [np.zeros(num_states)] * num_acts
+
+  def update_stats(self, x, val=0.0): # the default of the new value is 0 for exploration bonuses
+    mu, nu, alpha, beta = self.B[x, :]
+    self.B[x, 0] = (nu * mu + val) / (nu + 1)
+    self.B[x, 1] = nu + 1
+    self.B[x, 2] = alpha + 1.0/2.0
+    self.B[x, 3] = beta + (nu / (nu + 1.0)) * 0.5 * np.square(val - mu)
+
+  def sample(self, x, n, use_stddev=False):
+    mu, nu, alpha, beta = self.B[x, :]
+    scale = beta * (nu + 1)/(alpha * nu)
+    df = 2 * alpha
+    try:
+        r = t.rvs(df=df, loc=mu, scale=scale, size=n)
+    except:
+        print(scale)
+        exit()
+    bonus = np.maximum(r, 0.0) - np.average(r)
+    return bonus.max()
