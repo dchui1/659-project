@@ -122,7 +122,8 @@ class TabularBayesianApproximation(BayesianApproximator):
     df = 2 * alpha
     try:
         r = t.rvs(df=df, loc=mu, scale=scale, size=n)
-    except:
+    except Exception as e:
+        print(e)
         print(scale)
         exit()
     bonus = np.maximum(r, 0.0) - np.average(r)

@@ -108,9 +108,9 @@ Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
 (rewards, stderr) = averageOverRuns(Agent, Env, exp)
-# fig = plt.figure()
-# ax = plt.axes()
-# plotRewards(ax, rewards, stderr, 'Linear-Q')
+fig = plt.figure()
+ax = plt.axes()
+plotRewards(ax, rewards, stderr, 'Linear-Q')
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
@@ -122,8 +122,8 @@ with open(f'{path}/mean.csv', 'w') as f:
 with open(f'{path}/results.pkl', 'wb') as f:
     dump({"results": (rewards, stderr)}, f)
 #
-# plt.legend()
-# plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-# plt.xlabel("Number of Episodes")
-# plt.ylabel("Average Number of Steps to Reach Goal")
-# plt.show()
+plt.legend()
+plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+plt.xlabel("Number of Episodes")
+plt.ylabel("Average Number of Steps to Reach Goal")
+plt.show()
