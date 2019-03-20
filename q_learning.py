@@ -20,7 +20,9 @@ from utils.ExperimentDescription import ExperimentDescription
 import utils.registry as registry
 from pickle import dump
 
-def runExperiment(env, num_episodes, agent):
+
+def runExperiment(env, num_episodes, agent, render):
+
   total_reward = 0
   rewards = []
   steps = []
@@ -33,6 +35,10 @@ def runExperiment(env, num_episodes, agent):
     step = 0
 
     while not done:
+      if render:
+          print("Render env")
+          env.render()
+
       (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
       agent.update(s, sp, r, a, done)
 
@@ -44,12 +50,8 @@ def runExperiment(env, num_episodes, agent):
 
       step += 1
 
-      # for a in range(env.numActions()):
-      #     plt.imshow(agent.rewardApprox.action_var[a].reshape((30, 30)), cmap='hot', vmin=0.0, vmax=0.1)
-      #     plt.savefig(f'figs/heat_map.{step}.{a}.png')
-
     steps.append(step)
-    print("Episode", episode, " Step", step)
+    # print("Episode", episode, " Step", step)
     # agent.print()
 
   return (steps, rewards)
@@ -63,7 +65,7 @@ def averageOverRuns(Agent, Env, exp):
     np.random.seed(run)
     random.seed(run)
     agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-    (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
+    (steps, r) = runExperiment(env, exp.env_params['episodes'], agent, False)
     rewards.append(r)
     print("Completed a run")
     total_steps.append(steps)
@@ -84,12 +86,12 @@ def plotRewards(ax, rewards, stderr, label):
   ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
 
 def parse_args():
-  parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")
+  parser = argparse.ArgumentParser("Bayesian exploration testbed")
   parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
   parser.add_argument("-e", type=str, help="path to experiment description json file")
   parser.add_argument("-r", type=int, help="number of runs to complete")
   parser.add_argument("-b", type=str, default='results', help="base path for saving results")
-
+  parser.add_argument("--render", action="store_true")
   args = parser.parse_args()
   if args.b == None or args.r == None or args.i == None:
     print('Please run again using (without angle braces):')
@@ -102,25 +104,30 @@ def parse_args():
 
 
 args = parse_args()
-exp = ExperimentDescription(args.e, args.i, args.r)
 
+exp = ExperimentDescription(args.e, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
-
-(rewards, stderr) = averageOverRuns(Agent, Env, exp)
+if args.render:
+    print("Render mode")
+    env = Env(exp.env_params)
+    agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
+    runExperiment(env, exp.env_params['episodes'], agent, args.render)
+else:
+    (rewards, stderr) = averageOverRuns(Agent, Env, exp)
 # fig = plt.figure()
 # ax = plt.axes()
 # plotRewards(ax, rewards, stderr, 'Linear-Q')
 
 # save some metric for performance to file
-meanResult = np.mean(rewards)
-path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
-os.makedirs(path, exist_ok=True)
-with open(f'{path}/mean.csv', 'w') as f:
-    f.write(str(meanResult))
+    meanResult = np.mean(rewards)
+    path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
+    os.makedirs(path, exist_ok=True)
+    with open(f'{path}/mean.csv', 'w') as f:
+        f.write(str(meanResult))
 
-with open(f'{path}/results.pkl', 'wb') as f:
-    dump({"results": (rewards, stderr)}, f)
+    with open(f'{path}/results.pkl', 'wb') as f:
+        dump({"results": (rewards, stderr)}, f)
 #
 # plt.legend()
 # plt.title("Average Number of Steps to Reach Goal across 5 Runs")
