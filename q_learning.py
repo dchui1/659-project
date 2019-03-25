@@ -101,8 +101,6 @@ def parse_args():
   return args
 
 
-
-
 args = parse_args()
 
 exp = ExperimentDescription(args.e, args.i, args.r)
@@ -115,9 +113,16 @@ if args.render:
     runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
-# fig = plt.figure()
-# ax = plt.axes()
-# plotRewards(ax, rewards, stderr, 'Linear-Q')
+
+    fig = plt.figure()
+    ax = plt.axes()
+    plotRewards(ax, rewards, stderr, 'Linear-Q')
+
+    plt.legend()
+    plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+    plt.xlabel("Number of Episodes")
+    plt.ylabel("Average Number of Steps to Reach Goal")
+    plt.show()
 
 # save some metric for performance to file
     meanResult = np.mean(rewards)
@@ -128,9 +133,3 @@ else:
 
     with open(f'{path}/results.pkl', 'wb') as f:
         dump({"results": (rewards, stderr)}, f)
-#
-# plt.legend()
-# plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-# plt.xlabel("Number of Episodes")
-# plt.ylabel("Average Number of Steps to Reach Goal")
-# plt.show()
