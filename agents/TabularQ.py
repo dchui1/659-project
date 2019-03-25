@@ -48,6 +48,7 @@ class TabularQ(Agent):
         self.Q[s_idx, a] = self.Q[s_idx, a] + self.alpha*tde
 
     def update(self, S, Sp, r_plus_bonus, a, done):
+
         if done:
             self.learn(S, Sp, r_plus_bonus, a, 0)
         else:

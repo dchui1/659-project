@@ -28,7 +28,7 @@ class UCLS(object):
         self.thompson_beta = params["thompson_beta"]
         self.lambdaa = params["lambdaa"]
         # self.use_retroactive = self.config.use_retroactive
-        self.use_retroactive = False
+        self.use_retroactive = True
 
         self.ub_wt = np.sqrt(1.0+(1.0/self.p))
 
@@ -120,9 +120,10 @@ class UCLS(object):
             self.current_action = next_action
             return self.current_action
 
-    def populate_td_features(self, state, action=None):
+    def populate_td_features(self, state, action):
         self.current_state_representation.fill(0)
         self.temp_representation.fill(0)
+        # print("Populate td features called", state, action)
 
         # _state = torch.from_numpy(self.current_state).type(self.tensorType)
         # features = self.network.get_representation(_state).detach().data.numpy()
@@ -142,6 +143,7 @@ class UCLS(object):
         # print(self.temp_values)
         maxPos = np.where(self.temp_values>=np.max(self.temp_values))[0]
         chosenPos = maxPos[np.random.randint(len(maxPos),size=1)[0]]
+
         return chosenPos
 
     def policy(self, state):
