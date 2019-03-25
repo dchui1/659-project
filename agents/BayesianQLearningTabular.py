@@ -6,7 +6,7 @@ class BayesianQLearningTabular(TabularQ):
     def __init__(self, state_shape, num_acts, params):
         super().__init__(state_shape, num_acts, params)
         self.gamma = params['gamma']
-        self.bayesianQ = TabularQApproximation(state_shape, num_acts, self.gamma)
+        self.bayesianQ = TabularQApproximation(state_shape, num_acts, self.gamma, params)
 
     def learn(self, s, sp, r, a, gamma):
         x = self.getIndex(sp) + (a * self.num_states)

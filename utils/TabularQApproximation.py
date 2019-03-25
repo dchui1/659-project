@@ -4,16 +4,16 @@ from utils.bayesianapproximator import TabularBayesianApproximation
 
 class TabularQApproximation(TabularBayesianApproximation):
 
-  def __init__(self, state_dimensions, num_acts, gamma):
+  def __init__(self, state_dimensions, num_acts, gamma, params={'mu_0': 0.0, 'nu_0': 1.0, 'alpha_0': 1.0, 'beta_0': 0.1}):
         super().__init__(state_dimensions, num_acts)
         num_states = np.prod(state_dimensions)
         self.state_shape = state_dimensions
         self.B = np.zeros((num_states * num_acts, 4))
 
-        self.mu_0 = 1.0  # prior sample mean
-        self.nu_0 = 1.0  # prior "observations that make the prior mean"
-        self.alpha_0 = 1.1  # prior IG shape
-        self.beta_0 = 2.0  # prior IG scale
+        self.mu_0 = params['mu_0']  # prior sample mean
+        self.nu_0 = params['nu_0']  # prior "observations that make the prior mean"
+        self.alpha_0 = params['alpha_0']  # prior IG shape
+        self.beta_0 = params['beta_0']  # prior IG scale
         self.gamma = gamma
 
         self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0]

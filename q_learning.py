@@ -115,6 +115,7 @@ if args.render:
     runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
+    np.save('tmp/BayesianQ_mean_rewards.npy', rewards)
 # fig = plt.figure()
 # ax = plt.axes()
 # plotRewards(ax, rewards, stderr, 'Linear-Q')
