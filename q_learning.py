@@ -33,6 +33,7 @@ def runExperiment(env, num_episodes, agent, render):
     steps = []
     num_states = np.prod(env.observationShape())
     num_acts = env.numActions()
+    ac_vals_list = []
 
     agent.bayesianQ.mu_0  # prior sample mean
     agent.bayesianQ.nu_0  # prior "observations that make the prior mean"
@@ -53,6 +54,8 @@ def runExperiment(env, num_episodes, agent, render):
 
     # show the variance upto time T (ask Dustin/Mike)
     max_var_T = []
+    max_m2m1 = []
+    max_m1mu = []
     for episode in range(num_episodes):
         s = env.reset()
         a = agent.start(s)
@@ -63,6 +66,7 @@ def runExperiment(env, num_episodes, agent, render):
             if render:
                 print("Render env")
                 env.render()
+
             (sp, r, done, __) = env.step(a)  # Note: the environment "registers" the new sp as env.pos
             agent.update(s, sp, r, a, done)
             # compute the variance of the t-distribution (as in the formula in wiki) for the state sp. This is the state in which the bayesian distribution is updated.
@@ -73,28 +77,43 @@ def runExperiment(env, num_episodes, agent, render):
             # beta = agent.bayesianQ.B[x, 3]
             # t_distribution_var = beta * (nu + 1) / (alpha * nu)
             # t_dist_vars[a][sp_idx].append(t_distribution_var)
+            ac_vals_list.append(agent.act_vals)
 
+            m2_minus_m1sqrd_timestep = []
             var_single_timestep = []
+            m1_minus_mu_timestep = []
             for x_i in range(num_states * num_acts):
+                mu_i = agent.bayesianQ.B[x_i, 0]
                 nu_i = agent.bayesianQ.B[x_i, 1]
                 alpha_i = agent.bayesianQ.B[x_i, 2]
                 beta_i = agent.bayesianQ.B[x_i, 3]
-                t_distribution_var = beta_i * (nu_i + 1) / (alpha_i * nu_i)
+                t_distribution_var = beta_i / (nu_i * (alpha_i - 1))
+                # print(mu_i)
+                # print(nu_i)
+                # print(alpha_i)
+                # print(beta_i)
+                print(t_distribution_var)
+                print(agent.bayesianQ.gamma)
+                print(done)
+                print("")
                 var_single_timestep.append(t_distribution_var)
-            max_var_T.append(np.max(var_single_timestep))
+                m2_minus_m1sqrd_timestep.append(agent.bayesianQ.m2_minus_m1_sqrd)
+            max_v = np.max(var_single_timestep)
+            max_var_T.append(max_v)
+            max_m2m1.append(np.max(m2_minus_m1sqrd_timestep))
 
             if sp_idx == 0 and a == 2:
                 t_dist_var_s0a2.append(t_distribution_var)
-                np.save("tmp/BayesianQ_t_dist_variances_s0a2", t_dist_var_s0a2)
 
             data_dict = {
                     'max_var_T_array': max_var_T,
-                    't_dist_variances_s0a2': t_dist_var_s0a2
+                    't_dist_variances_s0a2': t_dist_var_s0a2,
+                    'm2m1': max_m2m1
                 }
 
             s = sp  # update the current state to sp
             a = agent.getAction(s)  # update the current action to a
-            # print("State action pair", s, a)
+            # print(agent.act_vals)
             total_reward += r
             rewards.append(total_reward)
             step += 1
@@ -102,7 +121,7 @@ def runExperiment(env, num_episodes, agent, render):
         steps.append(step)
         # print("Episode", episode, " Step", step)
         # agent.print()
-
+    np.save("tmp/Ac_Vals", ac_vals_list)
     np.save("tmp/BayesianQ_t_dist_variances", data_dict)
     print("run_experiment ran fine")
     return (steps, rewards)
