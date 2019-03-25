@@ -51,7 +51,7 @@ def runExperiment(env, num_episodes, agent, render):
       step += 1
 
     steps.append(step)
-    # print("Episode", episode, " Step", step)
+    print("Episode", episode, " Step", step)
     # agent.print()
 
   return (steps, rewards)

@@ -16,13 +16,9 @@ class UCLSTabularQ(TabularQ):
 
     def learn(self, s, sp, reward, a, gamma):
 
-
         self.ucls.populate_td_features(sp, a)
-
+        # print("Populate td features")
         td_error = reward - self.ucls.get_value()
+        # print("get value")
         self.ucls.step_all(reward, td_error)
-
-        # if not done:
-        #     self.current_state[:] = state
-        #     self.current_action = next_action
-        #     return self.current_action
+        # print("Step all")

@@ -14,7 +14,8 @@ class UCLS(object):
         # self.tensorType = torch.DoubleTensor
         self.tensorType = torch.DoubleTensor
         self.num_actions = num_acts
-        self.linear_dim = len(state_shape)
+        self.linear_dim = np.prod(state_shape)
+        self.state_dimensions = state_shape
 
         self.mem_size = self.linear_dim*self.num_actions
 
@@ -124,7 +125,7 @@ class UCLS(object):
         self.current_state_representation.fill(0)
         self.temp_representation.fill(0)
         # print("Populate td features called", state, action)
-
+        # print("The state:", state)
         # _state = torch.from_numpy(self.current_state).type(self.tensorType)
         # features = self.network.get_representation(_state).detach().data.numpy()
         # self.current_state_representation[(self.linear_dim*self.current_action):(self.linear_dim*(self.current_action+1))] = features
@@ -132,9 +133,17 @@ class UCLS(object):
         #
         # if state is not None:
         # _state = torch.from_numpy(state).type(self.tensorType)
-        features = state
+        features = self.get_representation(state)
+        # print("Features", features)
         # features = self.network.get_representation(_state).detach().data.numpy()
         self.temp_representation[(self.linear_dim*action):(self.linear_dim*(action+1))] -= (self.gamma*features)
+
+    def get_representation(self, state):
+        representation = np.zeros(self.state_dimensions)
+        # print("The state", state)
+        representation[tuple(state)] = 1
+        return representation.flatten()
+
 
     def get_value(self):
         return np.dot(self.weights, self.temp_representation)
@@ -150,7 +159,7 @@ class UCLS(object):
         # _state = torch.from_numpy(state).type(self.tensorType)
         # Picking a greedy action
         # features = self.network.get_representation(_state).detach().data.numpy()
-        features = state
+        features = self.get_representation(state)
         for i in range(self.num_actions):
             self.temp_representation.fill(0)
             self.temp_representation[(self.linear_dim*i):(self.linear_dim*(i+1))] = features
