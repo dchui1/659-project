@@ -19,7 +19,7 @@ class GridWorld(Environment):
 
     def getReward(self):
         if self._x == self.shape[0] - 1 and self._y == self.shape[1] - 1:
-            return 1
+            return 1.0
         return 0
 
     def step(self, action):

@@ -17,42 +17,41 @@ import numpy as np
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib import pyplot as pet
-print("here")
 from utils.bayesianapproximator import *
 from utils.BNNApproximation import BNNApproximation
 from utils.ExperimentDescription import ExperimentDescription
 import utils.registry as registry
 from pickle import dump
 from agents.TabularQ import TabularQ
+import time
+from time import sleep
 
 
 def runExperiment(env, num_episodes, agent, render):
-    print("inside_run_exp")
     total_reward = 0
     rewards = []
     steps = []
-    num_states = np.prod(env.observationShape())
-    num_acts = env.numActions()
 
-    agent.bayesianQ.mu_0  # prior sample mean
-    agent.bayesianQ.nu_0  # prior "observations that make the prior mean"
-    agent.bayesianQ.alpha_0  # prior IG shape
-    agent.bayesianQ.beta_0  # prior IG scale
-    # variance according to the wiki page:
-    prior_var = agent.bayesianQ.beta_0 * (agent.bayesianQ.nu_0 + 1) / (
-        agent.bayesianQ.alpha_0 * agent.bayesianQ.nu_0)
-    t_dist_vars = []
-    t_dist_var_s0a2 = []
-    for j in range(num_acts):
-        l_a = []
-        for i in range(num_states):
-            l_s = []
-            l_s.append(prior_var)
-            l_a.append(l_s)
-        t_dist_vars.append(l_a)
+    # For debugging: store action values and max variance
+    # num_states = np.prod(env.observationShape())
+    # num_acts = env.numActions()
+    # ac_vals_list = []
+    # agent.bayesianQ.mu_0  # prior sample mean
+    # agent.bayesianQ.nu_0  # prior "observations that make the prior mean"
+    # agent.bayesianQ.alpha_0  # prior IG shape
+    # agent.bayesianQ.beta_0  # prior IG scale
+    # prior_var = agent.bayesianQ.beta_0 * (agent.bayesianQ.nu_0 + 1) / (
+    #     agent.bayesianQ.alpha_0 * agent.bayesianQ.nu_0)
+    # t_dist_vars = []
+    # for j in range(num_acts):
+    #     l_a = []
+    #     for i in range(num_states):
+    #         l_s = []
+    #         l_s.append(prior_var)
+    #         l_a.append(l_s)
+    #     t_dist_vars.append(l_a)
+    # max_var_T = []
 
-    # show the variance upto time T (ask Dustin/Mike)
-    max_var_T = []
     for episode in range(num_episodes):
         s = env.reset()
         a = agent.start(s)
@@ -61,50 +60,49 @@ def runExperiment(env, num_episodes, agent, render):
 
         while not done:
             if render:
-                print("Render env")
+                # print("Render env")
                 env.render()
+                time.sleep(0.07)
+
             (sp, r, done, __) = env.step(a)  # Note: the environment "registers" the new sp as env.pos
             agent.update(s, sp, r, a, done)
-            # compute the variance of the t-distribution (as in the formula in wiki) for the state sp. This is the state in which the bayesian distribution is updated.
-            sp_idx = np.ravel_multi_index(sp, agent.state_shape)
-            # x = agent.getIndex(sp) + (a * num_states)
+
+            # For debugging: store the t-distribution variance and action_values at each timestep:
+            # s_idx = np.ravel_multi_index(s, agent.state_shape)
+            # x = agent.getIndex(s) + (a * num_states)
             # nu = agent.bayesianQ.B[x, 1]
             # alpha = agent.bayesianQ.B[x, 2]
             # beta = agent.bayesianQ.B[x, 3]
             # t_distribution_var = beta * (nu + 1) / (alpha * nu)
-            # t_dist_vars[a][sp_idx].append(t_distribution_var)
+            # t_dist_vars[a][s_idx].append(t_distribution_var)
+            # ac_vals_list.append(agent.act_vals)
 
-            var_single_timestep = []
-            for x_i in range(num_states * num_acts):
-                nu_i = agent.bayesianQ.B[x_i, 1]
-                alpha_i = agent.bayesianQ.B[x_i, 2]
-                beta_i = agent.bayesianQ.B[x_i, 3]
-                t_distribution_var = beta_i * (nu_i + 1) / (alpha_i * nu_i)
-                var_single_timestep.append(t_distribution_var)
-            max_var_T.append(np.max(var_single_timestep))
+            # For debugging: store the maximum variance for each timestep:
+            # var_single_timestep = []
+            # for x_i in range(num_states * num_acts):
+            #     nu_i = agent.bayesianQ.B[x_i, 1]
+            #     alpha_i = agent.bayesianQ.B[x_i, 2]
+            #     beta_i = agent.bayesianQ.B[x_i, 3]
+            #     t_distribution_var = beta_i * (nu_i + 1) / (nu_i * alpha_i)
+            #     var_single_timestep.append(t_distribution_var)
+            # max_var_T.append(np.max(var_single_timestep))
+            # data_dict = {'max_var_T_array': max_var_T}
 
-            if sp_idx == 0 and a == 2:
-                t_dist_var_s0a2.append(t_distribution_var)
-                np.save("tmp/BayesianQ_t_dist_variances_s0a2", t_dist_var_s0a2)
-
-            data_dict = {
-                    'max_var_T_array': max_var_T,
-                    't_dist_variances_s0a2': t_dist_var_s0a2
-                }
-
-            s = sp  # update the current state to sp
-            a = agent.getAction(s)  # update the current action to a
-            # print("State action pair", s, a)
+            s = sp
+            a = agent.getAction(s)
+            # print(agent.act_vals)
             total_reward += r
             rewards.append(total_reward)
             step += 1
-
         steps.append(step)
-        # print("Episode", episode, " Step", step)
-        # agent.print()
+        print("Episode", episode, " Step", step)
 
-    np.save("tmp/BayesianQ_t_dist_variances", data_dict)
-    print("run_experiment ran fine")
+    # data_dict2 = {
+    #         't_dist_var_along_trajectory': t_dist_vars,
+    #         'ac_vals_along_trajectory': ac_vals_list,
+    #     }
+    # np.save("tmp/BayesianQ_trajectory", data_dict2)
+    # np.save("tmp/BayesianQ_maxt_dist_variances", data_dict)
     return (steps, rewards)
 
 
@@ -126,7 +124,6 @@ def averageOverRuns(Agent, Env, exp):
     metric = np.array(total_steps)
     mean = metric.mean(axis=0)
     stderr = metric.std(axis=0) / np.sqrt(exp.runs)
-    print("averageOverRunas ran fine")
     return (mean, stderr)
 
 
@@ -155,15 +152,19 @@ def parse_args():
         print('Please run again using (without angle braces):')
         print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
         exit(1)
-
     return args
 
 
 args = parse_args()
-
 exp = ExperimentDescription(args.e, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
+
+# In case the render command causes issues, get ride of the lines in between dash lines, and add the following:
+# (rewards, stderr) = averageOverRuns(Agent, Env, exp)
+# np.save("tmp/BayesianQ_mean_rewards", rewards)
+
+# If the render command causes issues, get rid of the following lines: ---------
 if args.render:
     print("Render mode")
     env = Env(exp.env_params)
@@ -171,12 +172,8 @@ if args.render:
     runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
-    np.save('tmp/BayesianQ_mean_rewards.npy', rewards)
-(rewards, stderr) = averageOverRuns(Agent, Env, exp)
-np.save("tmp/BayesianQ_mean_rewards", rewards)
-# fig = plt.figure()
-# ax = plt.axes()
-# plotRewards(ax, rewards, stderr, "BayesianQ-Agent")
+
+    np.save("tmp/BayesianQ_mean_rewards", rewards)
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
@@ -187,37 +184,3 @@ with open(f'{path}/mean.csv', 'w') as f:
 
 with open(f'{path}/results.pkl', 'wb') as f:
     dump({"results": (rewards, stderr)}, f)
-
-# plt.legend()
-# plt.title("Average Number of Steps to Reach Goal across 1 Runs")
-# plt.xlabel("Number of Episodes")
-# plt.ylabel("Average Number of Steps to Reach Goal")
-# plt.show()
-
-# if args.render:
-#     print("Render mode")
-#     env = Env(exp.env_params)
-#     agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-#     runExperiment(env, exp.env_params['episodes'], agent, args.render)
-# else:
-#     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
-#
-#     fig = plt.figure()
-#     ax = plt.axes()
-#     plotRewards(ax, rewards, stderr, 'Bayesian-Q')
-#
-# # save some metric for performance to file
-#     meanResult = np.mean(rewards)
-#     path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
-#     os.makedirs(path, exist_ok=True)
-#     with open(f'{path}/mean.csv', 'w') as f:
-#         f.write(str(meanResult))
-#
-#     with open(f'{path}/results.pkl', 'wb') as f:
-#         dump({"results": (rewards, stderr)}, f)
-#
-#     plt.legend()
-#     plt.title("Average Number of Steps to Reach Goal across 1 Run")
-#     plt.xlabel("Number of Episodes")
-#     plt.ylabel("Average Number of Steps to Reach Goal")
-#     plt.show()
