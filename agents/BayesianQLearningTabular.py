@@ -12,19 +12,9 @@ class BayesianQLearningTabular(TabularQ):
         x = self.getIndex(s) + (a * self.num_states)
         ap = self.maxAction(sp)
         x_next = self.getIndex(sp) + (ap * self.num_states)
-        self.bayesianQ.update_stats(x, x_next, r)
-        # sampledValue = self.bayesianQ.sample(x, 100)
-        # self.maxAction(sp)
-        # s_idx = self.getIndex(s)
-        # self.Q[s_idx, a] = self.Q[s_idx, a] + sampledValue
-
-    # def q_sample(self, s, a):
-    #     x = self.getIndex(s) + (a * self.num_states)
-    #     return self.bayesianQ.sample(x, 100)
+        self.bayesianQ.update_stats(x, x_next, r, gamma)
 
     def maxAction(self, s):
         self.act_vals = [self.bayesianQ.sample(self.getIndex(s) + (a * self.num_states), 1) for a in range(self.num_acts)]
         move = argMax(self.act_vals)
-        # print("Action values for s", s, act_vals)
-        # print("Move", move)
         return move
