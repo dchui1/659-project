@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-
+import time
 from agents.Agent import Agent
 
 class UCLSAgent(Agent):
@@ -31,6 +31,7 @@ class UCLSAgent(Agent):
         self.greedy = True
         self.thompson_beta = params["thompson_beta"]
         self.lambdaa = params["lambdaa"]
+        self.lambdaa = 0
 
         self.use_retroactive = True
 
@@ -54,7 +55,7 @@ class UCLSAgent(Agent):
         self.temp_ub = np.zeros(self.num_actions)
         self.temp_mean = np.zeros(self.num_actions)
 
-        self.current_state = np.zeros(self.state_dimensions)
+        self.current_state = np.zeros(self.state_dimensions).flatten()
         self.current_state_representation = np.zeros(self.mem_size)
         self.current_action = -1
 
@@ -67,12 +68,13 @@ class UCLSAgent(Agent):
         self.zvec *= 0.0
         self.current_action = self.policy(state)
         print("State in start", state)
-        self.current_state[:] = state
+        self.current_state[:] = self.get_representation(state)
         return self.current_action
 
     def step_all(self,reward,td_error):
         # print(td_error)
-        self.zvec *= (self.gamma*self.lambdaa)
+        # self.zvec *= (self.gamma*self.lambdaa)
+        print("Current state representation", self.current_state_representation)
         self.zvec += self.current_state_representation
 
         self.bvec *= (1-self.beta)
@@ -135,12 +137,16 @@ class UCLSAgent(Agent):
         td_error = reward - self.get_value()
         self.step_all(reward, td_error)
 
+        print("The state at update", state)
+
         if not done:
-            self.current_state[:] = state
+            self.current_state[:] = self.get_representation(state)
             self.current_action = next_action
             return self.current_action
 
     def populate_td_features(self, state=None, action=None):
+        print("Populate td features")
+        print("Self.current_state_representation", self.current_state_representation)
         self.current_state_representation.fill(0)
         self.temp_representation.fill(0)
 
@@ -149,14 +155,17 @@ class UCLSAgent(Agent):
         features = _state.flatten()
         self.current_state_representation[(self.linear_dim*self.current_action):(self.linear_dim*(self.current_action+1))] = features
         self.temp_representation[(self.linear_dim*self.current_action):(self.linear_dim*(self.current_action+1))] = features
-
+        # print("Setting current state representation", self.current_state_representation)
+        # time.sleep(5)
         if state is not None:
             # _state = torch.from_numpy(state).type(self.config.FloatTensor)
             # features = self.network.get_representation(_state).detach().data.numpy()
             features = self.get_representation(state)
+            print("features", features)
             self.temp_representation[(self.linear_dim*action):(self.linear_dim*(action+1))] -= (self.gamma*features)
 
     def getAction(self, Obs):
+        print("The action", self.current_action)
         return self.current_action
 
     def get_value(self):
@@ -200,4 +209,5 @@ class UCLSAgent(Agent):
         representation = np.zeros(self.state_dimensions)
 
         representation[tuple(state)] = 1
+        print("Representation", representation.flatten())
         return representation.flatten()
