@@ -11,13 +11,13 @@
         "eta" : [0.0001],
         "beta": [0.001, 0.002],
         "c_max": [0.05,  0.1],
-        "lambdaa": [0.9, 0.8, 0.99],
+        "lambdaa": 0,
         "thompson_beta": [0.001]
 
     },
     "envParameters": {
-        "shape": [30, 30],
+        "shape": [2, 2],
         "steps": 700,
-        "episodes": 1300
+        "episodes": 1000
     }
 }

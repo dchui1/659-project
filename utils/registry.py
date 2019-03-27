@@ -8,6 +8,7 @@ from agents.RiverswimOptimal import Optimal
 from agents.UCB import UCB
 from agents.LinearQ_TDistR import TDistRLinearQ
 from agents.UCLSTabularQ import UCLSTabularQ
+from agents.UCLSAgent import UCLSAgent
 
 # environments
 from environments.gridworld import GridWorld
@@ -30,7 +31,7 @@ def getAgent(exp):
         return TDistRLinearQ
 
     if exp.agent == 'ucls tabular-q':
-        return UCLSTabularQ
+        return UCLSAgent
 
     raise NotImplementedError
 

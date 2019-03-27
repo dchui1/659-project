@@ -1,21 +1,24 @@
 import torch
 import numpy as np
 
-class UCLS(object):
+from agents.Agent import Agent
+
+class UCLSAgent(Agent):
     def __init__(self, state_shape, num_acts, params):
 
         # self.config = config
-
+        #
         # self.network = self.config.network
-
+        #
         # self.state_dim = self.config.input_dims
         # self.num_actions = self.config.num_actions
         # self.linear_dim = self.config.network_dims[-2]
-        # self.tensorType = torch.DoubleTensor
+
         self.tensorType = torch.DoubleTensor
         self.num_actions = num_acts
         self.linear_dim = np.prod(state_shape)
         self.state_dimensions = state_shape
+
 
         self.mem_size = self.linear_dim*self.num_actions
 
@@ -28,8 +31,9 @@ class UCLS(object):
         self.greedy = True
         self.thompson_beta = params["thompson_beta"]
         self.lambdaa = params["lambdaa"]
-        # self.use_retroactive = self.config.use_retroactive
+
         self.use_retroactive = True
+
 
         self.ub_wt = np.sqrt(1.0+(1.0/self.p))
 
@@ -50,21 +54,25 @@ class UCLS(object):
         self.temp_ub = np.zeros(self.num_actions)
         self.temp_mean = np.zeros(self.num_actions)
 
-        # self.current_state = np.zeros(self.state_dim)
+        self.current_state = np.zeros(self.state_dimensions)
         self.current_state_representation = np.zeros(self.mem_size)
         self.current_action = -1
 
-
+    # def start_alt(self, state, action):
+    #     self.zvec *= 0.0
+    #     self.current_state[:] = state
+    #     self.current_action = action
 
     def start(self, state):
         self.zvec *= 0.0
         self.current_action = self.policy(state)
+        print("State in start", state)
         self.current_state[:] = state
         return self.current_action
 
     def step_all(self,reward,td_error):
         # print(td_error)
-        # self.zvec *= (self.gamma*self.lambdaa)
+        self.zvec *= (self.gamma*self.lambdaa)
         self.zvec += self.current_state_representation
 
         self.bvec *= (1-self.beta)
@@ -78,12 +86,8 @@ class UCLS(object):
 
         self.nuvec *= (1-self.beta)
         self.nuvec += (self.beta*td_error*self.zvec)
-        print("zvec", self.zvec)
-        print("Bmat shape", self.Bmat.shape)
-        print("nuvec shape", self.nuvec.shape)
+
         avec = self.Bmat.transpose().dot(self.nuvec)
-        print("avec", avec)
-        print("beta", self.beta)
 
         if self.use_retroactive:
             temp = self.c_max
@@ -107,9 +111,20 @@ class UCLS(object):
         self.weights += 0.1*((self.Bmat.transpose()+self.etaI).dot(self.bvec-self.Amat.dot(self.weights)))
         # print(self.weights)
 
+    # def step_alt(self, reward, state, done, action):
+    #     if not done:
+    #         self.populate_td_features(state,action)
+    #     else:
+    #         self.populate_td_features(state=None)
+    #
+    #     td_error = reward - self.get_value()
+    #     self.step_all(reward, td_error)
+    #
+    #     if not done:
+    #         self.current_state[:] = state
+    #         self.current_action = action
 
-
-    def step(self, reward, state, done):
+    def update(self, state, sp, reward, action, done):
 
         if not done:
             next_action = self.policy(state)
@@ -129,41 +144,20 @@ class UCLS(object):
         self.current_state_representation.fill(0)
         self.temp_representation.fill(0)
 
-        # _state = torch.from_numpy(self.current_state).type(self.config.FloatTensor)
-        features = self.network.get_representation(_state).detach().data.numpy()
+        _state = torch.from_numpy(self.current_state).type(self.tensorType)
+        # features = self.network.get_representation(state).detach().data.numpy()
+        features = _state.flatten()
         self.current_state_representation[(self.linear_dim*self.current_action):(self.linear_dim*(self.current_action+1))] = features
         self.temp_representation[(self.linear_dim*self.current_action):(self.linear_dim*(self.current_action+1))] = features
 
         if state is not None:
-            _state = torch.from_numpy(state).type(self.config.FloatTensor)
-            features = self.network.get_representation(_state).detach().data.numpy()
+            # _state = torch.from_numpy(state).type(self.config.FloatTensor)
+            # features = self.network.get_representation(_state).detach().data.numpy()
+            features = self.get_representation(state)
             self.temp_representation[(self.linear_dim*action):(self.linear_dim*(action+1))] -= (self.gamma*features)
 
-
-    # def populate_td_features(self, state, action):
-    #     self.current_state_representation.fill(0)
-    #     self.temp_representation.fill(0)
-    #     # print("Populate td features called", state, action)
-    #     # print("The state:", state)
-    #     # _state = torch.from_numpy(self.current_state).type(self.tensorType)
-    #     # features = self.network.get_representation(_state).detach().data.numpy()
-    #     # self.temp_representation[(self.linear_dim*self.current_action):(self.linear_dim*(self.current_action+1))] = features
-    #     #
-    #     # if state is not None:
-    #     # _state = torch.from_numpy(state).type(self.tensorType)
-    #     features = self.get_representation(state)
-    #     # self.current_state_representation[(self.linear_dim*self.current_action):(self.linear_dim*(self.current_action+1))] = features
-    #
-    #     # print("Features", features)
-    #     # features = self.network.get_representation(_state).detach().data.numpy()
-    #     self.temp_representation[(self.linear_dim*action):(self.linear_dim*(action+1))] -= (self.gamma*features)
-
-    def get_representation(self, state):
-        representation = np.zeros(self.state_dimensions)
-        # print("The state", state)
-        representation[tuple(state)] = 1
-        return representation.flatten()
-
+    def getAction(self, Obs):
+        return self.current_action
 
     def get_value(self):
         return np.dot(self.weights, self.temp_representation)
@@ -172,14 +166,14 @@ class UCLS(object):
         # print(self.temp_values)
         maxPos = np.where(self.temp_values>=np.max(self.temp_values))[0]
         chosenPos = maxPos[np.random.randint(len(maxPos),size=1)[0]]
-
         return chosenPos
 
     def policy(self, state):
         # _state = torch.from_numpy(state).type(self.tensorType)
         # Picking a greedy action
-        # features = self.network.get_representation(_state).detach().data.numpy()
+        # features = self.get_representation(state).detach().data.numpy()
         features = self.get_representation(state)
+
         for i in range(self.num_actions):
             self.temp_representation.fill(0)
             self.temp_representation[(self.linear_dim*i):(self.linear_dim*(i+1))] = features
@@ -198,3 +192,12 @@ class UCLS(object):
             self.temp_values[:] = [(self.temp_mean[i] + (self.thompson_beta*np.random.normal()*self.temp_ub[i])) for i in range(0,self.num_actions)]
 
         return self.get_greedy_action()
+
+
+    def get_representation(self, state):
+        print("The state in get representation", state)
+        print(state.shape)
+        representation = np.zeros(self.state_dimensions)
+
+        representation[tuple(state)] = 1
+        return representation.flatten()
