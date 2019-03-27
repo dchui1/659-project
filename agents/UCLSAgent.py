@@ -75,6 +75,8 @@ class UCLSAgent(Agent):
         # print(td_error)
         # self.zvec *= (self.gamma*self.lambdaa)
         print("Current state representation", self.current_state_representation)
+
+        
         self.zvec += self.current_state_representation
 
         self.bvec *= (1-self.beta)
