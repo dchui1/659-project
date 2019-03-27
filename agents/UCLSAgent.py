@@ -67,28 +67,57 @@ class UCLSAgent(Agent):
     def start(self, state):
         self.zvec *= 0.0
         self.current_action = self.policy(state)
-        print("State in start", state)
+        # print("State in start", state)
         self.current_state[:] = self.get_representation(state)
+
         return self.current_action
 
     def step_all(self,reward,td_error):
         # print(td_error)
         # self.zvec *= (self.gamma*self.lambdaa)
-        print("Current state representation", self.current_state_representation)
+        # print("Current state representation", self.current_state_representation)
 
         index = self.current_state_representation.nonzero()[0][0]
+        # print(self.current_state_representation)
+        # print("index", index)
         self.zvec += self.current_state_representation
 
         self.bvec *= (1-self.beta)
         self.bvec += (self.beta*self.zvec*reward)
 
         self.Amat *= (1-self.beta)
-        self.Amat += (self.beta*np.outer(self.zvec,self.temp_representation))
+        # print("temp representation", self.temp_representation)
+        # print("zvec", self.zvec)
+        outer_prod= np.outer(self.zvec,self.temp_representation)
+        # print('outer prod shape', outer_prod)
 
-        alpha = 0.01/((np.square(np.linalg.norm(self.Amat))*np.square(np.linalg.norm(self.current_state_representation)))+1.0)
-        self.Bmat -= alpha*(np.outer(self.Amat.dot(self.Amat.transpose().dot(self.Bmat.dot(self.current_state_representation)) - self.current_state_representation),self.current_state_representation))
+        self.Amat += (self.beta*outer_prod)
+        # Since our current state representation is 1 hot, the square of the norm is just 1, so we can remove this term
+        # alpha = 0.01/((np.square(np.linalg.norm(self.Amat))*np.square(np.linalg.norm(self.current_state_representation)))+1.0)
+        alpha = 0.01/((np.square(np.linalg.norm(self.Amat)))+1.0)
+
+        # print("Bmat shape", self.Bmat.shape)
+        # print("state", self.current_state_representation)
+        # print("BMAT", self.Bmat)
+        # bmat_dot = self.Bmat.dot(self.current_state_representation)
+        bmat_dot = self.Bmat[:, index]
+
+        # print("Bmat dot", bmat_dot)
+        # print("new bmat_dot", self.Bmat[:, index])
+        # print("bmat dot shape", bmat_dot.shape)
+        # print("A transpose", self.Amat.transpose())
+        a_transpose_dot = self.Amat.transpose().dot(bmat_dot)
+        # print("A transpose dot", self.Amat.transpose().dot(bmat_dot))
+        amat_dot = self.Amat.dot(a_transpose_dot - self.current_state_representation)
+        # print("Amat dot", amat_dot)
+        # outer_prod_a_current = np.outer(amat_dot,self.current_state_representation)
+        outer_prod_a_current = np.zeros([self.mem_size, self.mem_size])
+        outer_prod_a_current[:, index] = amat_dot
+        # print("outer prod", outer_prod_a_current)
+        self.Bmat -= alpha*(outer_prod_a_current)
 
         self.nuvec *= (1-self.beta)
+        # print("Zvec", self.zvec)
         self.nuvec += (self.beta*td_error*self.zvec)
 
         avec = self.Bmat.transpose().dot(self.nuvec)
@@ -139,7 +168,7 @@ class UCLSAgent(Agent):
         td_error = reward - self.get_value()
         self.step_all(reward, td_error)
 
-        print("The state at update", state)
+        # print("The state at update", state)
 
         if not done:
             self.current_state[:] = self.get_representation(state)
@@ -147,8 +176,6 @@ class UCLSAgent(Agent):
             return self.current_action
 
     def populate_td_features(self, state=None, action=None):
-        print("Populate td features")
-        print("Self.current_state_representation", self.current_state_representation)
         self.current_state_representation.fill(0)
         self.temp_representation.fill(0)
 
@@ -163,11 +190,11 @@ class UCLSAgent(Agent):
             # _state = torch.from_numpy(state).type(self.config.FloatTensor)
             # features = self.network.get_representation(_state).detach().data.numpy()
             features = self.get_representation(state)
-            print("features", features)
+            # print("features", features)
             self.temp_representation[(self.linear_dim*action):(self.linear_dim*(action+1))] -= (self.gamma*features)
 
     def getAction(self, Obs):
-        print("The action", self.current_action)
+        # print("The action", self.current_action)
         return self.current_action
 
     def get_value(self):
@@ -206,10 +233,10 @@ class UCLSAgent(Agent):
 
 
     def get_representation(self, state):
-        print("The state in get representation", state)
-        print(state.shape)
+        # print("The state in get representation", state)
+        # print(state.shape)
         representation = np.zeros(self.state_dimensions)
 
         representation[tuple(state)] = 1
-        print("Representation", representation.flatten())
+        # print("Representation", representation.flatten())
         return representation.flatten()
