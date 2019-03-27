@@ -16,7 +16,7 @@
 
     },
     "envParameters": {
-        "shape": [2, 2],
+        "shape": [30, 30],
         "steps": 700,
         "episodes": 1000
     }
