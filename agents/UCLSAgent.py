@@ -80,10 +80,10 @@ class UCLSAgent(Agent):
         index = self.current_state_representation.nonzero()[0][0]
         # print(self.current_state_representation)
         # print("index", index)
-        self.zvec += self.current_state_representation
+        self.zvec = self.current_state_representation
 
         self.bvec *= (1-self.beta)
-        self.bvec += (self.beta*self.zvec*reward)
+        self.bvec[index] += (self.beta*self.zvec[index]*reward)
 
         self.Amat *= (1-self.beta)
         # print("temp representation", self.temp_representation)
@@ -122,6 +122,7 @@ class UCLSAgent(Agent):
 
         avec = self.Bmat.transpose().dot(self.nuvec)
 
+
         if self.use_retroactive:
             temp = self.c_max
             avec_square = np.multiply(avec,avec)
@@ -131,15 +132,17 @@ class UCLSAgent(Agent):
                 for i in range(self.mem_size):
                     self.Cmat[i,i] += self.cvec[i]*(self.c_max-temp)
 
-        for i in range(self.mem_size):
-            if self.zvec[i] <= self.beta:
-                continue
-            # self.cvec[i] *= (1-self.beta)
-            for j in range(self.mem_size):
-                if self.zvec[j] <= self.beta:
-                    continue
-                self.Cmat[i,j] *= (1-self.beta)
-                self.Cmat[i,j] += (self.beta*avec[i]*avec[j])
+        # for i in range(self.mem_size):
+        #     if self.zvec[i] <= self.beta:
+        #         continue
+        #     # self.cvec[i] *= (1-self.beta)
+        #     for j in range(self.mem_size):
+        #         if self.zvec[j] <= self.beta:
+        #             continue
+        #         self.Cmat[i,j] *= (1-self.beta)
+        #         self.Cmat[i,j] += (self.beta*avec[i]*avec[j])
+            self.Cmat[index,index] *= (1-self.beta)
+            self.Cmat[index,index] += (self.beta*avec[index]*avec[index])
 
         self.weights += 0.1*((self.Bmat.transpose()+self.etaI).dot(self.bvec-self.Amat.dot(self.weights)))
         # print(self.weights)
