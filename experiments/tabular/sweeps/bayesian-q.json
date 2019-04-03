@@ -12,8 +12,8 @@
 	"beta_0": [1.0, 2.0, 3.0]
     },
     "envParameters": {
-        "shape": [2, 2],
-        "steps": 500,
-        "episodes": 5000
+        "shape": [30, 30],
+        "steps": 1000,
+        "episodes": 1300
     }
 }
