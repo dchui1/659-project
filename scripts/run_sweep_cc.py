@@ -2,15 +2,15 @@ import argparse
 import os
 from utils.ExperimentDescription import ExperimentDescription
 
-tasks_per_cpu = 20
-cpus = 16
-memory = 4 # in gigabytes
+tasks_per_cpu = 8
+cpus = 1
+memory = 8 # in gigabytes
 
 sbatch_args = ' '.join([
     # use martha's resource allocation account
     '--account=def-amw8',
     # largest time allotment for fastest scheduling group
-    '--time=11:59:00',
+    '--time=7:55:00',
     # number of cores to request
     f'--ntasks={cpus}',
     # amount of memory each core will need

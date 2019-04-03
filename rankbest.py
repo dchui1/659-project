@@ -4,7 +4,6 @@ import os
 tabular_location = "bayesian-exploration-results/tabular/gridworld/"
 linearQ_location = "bayesian-exploration-results/tabular/cts-gridworld/"
 blr_tabularQ_loc = "bayesian-exploration-results/blr/gridworld/"
-bql_loc = "bayesian-exploration-results/Bayesian Q learning/gridworld/"
 
 def process_agent_results(file_location):
     agents = os.listdir(file_location)
@@ -37,7 +36,6 @@ def process_agent_results(file_location):
 agent_results = {**process_agent_results(tabular_location),
                  **process_agent_results(linearQ_location),
                  **process_agent_results(blr_tabularQ_loc),
-                 **process_agent_results(bql_loc)
 }
 
 for agent, results in agent_results.items():
