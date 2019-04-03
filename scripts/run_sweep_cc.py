@@ -10,7 +10,7 @@ sbatch_args = ' '.join([
     # use martha's resource allocation account
     '--account=def-amw8',
     # largest time allotment for fastest scheduling group
-    '--time=11:59:00',
+    '--time=7:55:00',
     # number of cores to request
     f'--ntasks={cpus}',
     # amount of memory each core will need

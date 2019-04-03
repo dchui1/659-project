@@ -7,5 +7,5 @@ __pycache__
 lib/
 results/
 sparse/build
-
+tmp/
 figs/

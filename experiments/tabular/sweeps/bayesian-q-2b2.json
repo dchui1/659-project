@@ -1,0 +1,19 @@
+{
+    "name": "Bayesian Q learning",
+    "agent": "bayesian-q-learning",
+    "environment": "gridworld",
+    "metaParameters": {
+	"alpha": 0.0,
+        "epsilon": 0.0,
+        "gamma": 0.9,
+	"mu_0": [0.0],
+	"nu_0": [1.0],
+	"alpha_0": [1.1],
+	"beta_0": [1.0]
+    },
+    "envParameters": {
+        "shape": [2, 2],
+        "steps": 500,
+        "episodes": 5000
+    }
+}
