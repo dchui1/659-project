@@ -95,7 +95,7 @@ def runExperiment(env, num_episodes, agent, render):
             rewards.append(total_reward)
             step += 1
         steps.append(step)
-        print("Episode", episode, " Step", step)
+        #print("Episode", episode, " Step", step)
 
     # data_dict2 = {
     #         't_dist_var_along_trajectory': t_dist_vars,
@@ -118,7 +118,7 @@ def averageOverRuns(Agent, Env, exp):
         (steps, r) = runExperiment(env, exp.env_params['episodes'], agent,
                                    False)
         rewards.append(r)
-        print("Completed a run")
+        #print("Completed a run")
         total_steps.append(steps)
         # print("Completed run %d of %d"%(, exp.runs)
     metric = np.array(total_steps)
@@ -173,7 +173,7 @@ if args.render:
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
 
-    np.save("tmp/BayesianQ_mean_rewards", rewards)
+    # np.save("tmp/BayesianQ_mean_rewards", rewards)
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
