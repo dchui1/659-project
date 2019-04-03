@@ -3,7 +3,7 @@ import os
 from utils.ExperimentDescription import ExperimentDescription
 
 tasks_per_cpu = 8
-cpus = 1
+cpus = 8
 memory = 8 # in gigabytes
 
 sbatch_args = ' '.join([

@@ -15,7 +15,7 @@ def main():
         fileName = sys.argv[i]
         f1 = open(fileName, 'rb')
         data_dict = pickle.load(f1)
-        steps = data_dict["results"]
+        (steps, stderr) = data_dict["results"]
         runResults.append(steps)
     (steps, stderr) = averageOverRuns(runResults)
     plotRewards(ax, steps, stderr, fileName)
