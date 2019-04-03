@@ -44,7 +44,11 @@ class UCLSAgent(Agent):
         self.weights = np.zeros(self.mem_size)
 
         self.Bmat = np.eye(self.mem_size)
-        self.Cmat = self.c_max*np.eye(self.mem_size)
+        # self.Cmat = self.c_max*np.eye(self.mem_size)
+        self.c_vec = self.c_max * np.ones(self.mem_size)
+        # print("C matrix", self.Cmat)
+        # print("c vec", self.c_vec)
+
         self.etaI = self.eta*np.eye(self.mem_size)
         self.cvec = self.c_max*np.ones(self.mem_size)
         self.nuvec = np.zeros(self.mem_size)
@@ -66,6 +70,7 @@ class UCLSAgent(Agent):
 
     def start(self, state):
         self.zvec *= 0.0
+
         self.current_action = self.policy(state)
         # print("State in start", state)
         self.current_state[:] = self.get_representation(state)
@@ -74,12 +79,13 @@ class UCLSAgent(Agent):
 
     def step_all(self,reward,td_error):
         # print(td_error)
-        # self.zvec *= (self.gamma*self.lambdaa)
-        # print("Current state representation", self.current_state_representation)
 
+        # print("Current state representation", self.current_state_representation)
+        step_start = time.time()
         index = self.current_state_representation.nonzero()[0][0]
         # print(self.current_state_representation)
         # print("index", index)
+        # self.zvec *= (self.gamma*self.lambdaa)
         self.zvec = self.current_state_representation
 
         self.bvec *= (1-self.beta)
@@ -141,11 +147,18 @@ class UCLSAgent(Agent):
         #             continue
         #         self.Cmat[i,j] *= (1-self.beta)
         #         self.Cmat[i,j] += (self.beta*avec[i]*avec[j])
-            self.Cmat[index,index] *= (1-self.beta)
-            self.Cmat[index,index] += (self.beta*avec[index]*avec[index])
+        # self.Cmat[index,index] *= (1-self.beta)
+        # self.Cmat[index,index] += (self.beta*avec[index]*avec[index])
+        self.c_vec[index] *= (1-self.beta)
+        self.c_vec[index] += (self.beta *avec[index]*avec[index])
 
+        weight_start = time.time()
         self.weights += 0.1*((self.Bmat.transpose()+self.etaI).dot(self.bvec-self.Amat.dot(self.weights)))
-        # print(self.weights)
+
+        print("Time for step all", time.time() - step_start)
+        print("Time for weights update", time.time() - weight_start)
+
+
 
     # def step_alt(self, reward, state, done, action):
     #     if not done:
@@ -163,7 +176,9 @@ class UCLSAgent(Agent):
     def update(self, state, sp, reward, action, done):
 
         if not done:
+            start = time.time()
             next_action = self.policy(state)
+            print("Time to get policy", time.time() - start)
             self.populate_td_features(state,next_action)
         else:
             self.populate_td_features(state=None)
@@ -219,7 +234,9 @@ class UCLSAgent(Agent):
             self.temp_representation.fill(0)
             self.temp_representation[(self.linear_dim*i):(self.linear_dim*(i+1))] = features
 
-            temp = np.dot(self.temp_representation, self.Cmat.dot(self.temp_representation))
+            # temp = np.dot(self.temp_representation, self.Cmat.dot(self.temp_representation))
+            temp = self.c_vec.dot(self.temp_representation)
+            # print("temp temp vec", temp, temp_vec)
             if temp <= 0:
                 self.temp_ub[i] = 0
             else:
