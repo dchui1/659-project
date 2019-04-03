@@ -7,7 +7,6 @@ from agents.BnnRTabularQ import BnnRTabularQ
 from agents.RiverswimOptimal import Optimal
 from agents.UCB import UCB
 from agents.LinearQ_TDistR import TDistRLinearQ
-from agents.UCLSTabularQ import UCLSTabularQ
 from agents.UCLSAgent import UCLSAgent
 
 # environments
