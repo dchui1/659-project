@@ -50,8 +50,7 @@ class TDistBayesianApproximation(BayesianApproximator):
 
 
 class TabularBayesianApproximation(BayesianApproximator):
-    def __init__(self, state_dimensions, num_acts, params={"mu_0":
-1.0, "nu_0": 1.0, "alpha_0": 0.1, "beta_0": 1.0}):
+    def __init__(self, state_dimensions, num_acts, params={"mu_0": 1.0, "nu_0": 1.0, "alpha_0": 0.1, "beta_0": 1.0}):
         super().__init__(state_dimensions, num_acts)
         num_states = np.prod(state_dimensions)
         self.state_shape = state_dimensions
