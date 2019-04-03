@@ -95,7 +95,7 @@ class UCLSAgent(Agent):
         # print("temp representation", self.temp_representation)
         # print("zvec", self.zvec)
         outer_prod= np.outer(self.zvec,self.temp_representation)
-        # print('outer prod shape', outer_prod)
+
 
         self.Amat += (self.beta*outer_prod)
         # Since our current state representation is 1 hot, the square of the norm is just 1, so we can remove this term
@@ -153,8 +153,14 @@ class UCLSAgent(Agent):
         self.c_vec[index] += (self.beta *avec[index]*avec[index])
 
         weight_start = time.time()
-        self.weights += 0.1*((self.Bmat.transpose()+self.etaI).dot(self.bvec-self.Amat.dot(self.weights)))
+        x = self.bvec-self.Amat.dot(self.weights)
+        self.weights += 0.1*(self.Bmat.transpose() @ x  + self.eta * x)
 
+        # print(self.weights)
+        # print("Weight update: ", (self.Bmat.transpose()+self.etaI).dot(self.bvec-self.Amat.dot(self.weights)))
+        # print("A mat", self.Amat)
+        # print("B mat", self.Bmat)
+        #
         print("Time for step all", time.time() - step_start)
         print("Time for weights update", time.time() - weight_start)
 
