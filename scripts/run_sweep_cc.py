@@ -2,9 +2,9 @@ import argparse
 import os
 from utils.ExperimentDescription import ExperimentDescription
 
-tasks_per_cpu = 20
-cpus = 16
-memory = 4 # in gigabytes
+tasks_per_cpu = 8
+cpus = 8
+memory = 8 # in gigabytes
 
 sbatch_args = ' '.join([
     # use martha's resource allocation account
