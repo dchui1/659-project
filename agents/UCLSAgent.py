@@ -86,49 +86,66 @@ class UCLSAgent(Agent):
         # print(self.current_state_representation)
         # print("index", index)
         # self.zvec *= (self.gamma*self.lambdaa)
+        bvec_start = time.time()
         self.zvec = self.current_state_representation
 
         self.bvec *= (1-self.beta)
         self.bvec[index] += (self.beta*self.zvec[index]*reward)
+        print("Time for bvec update", time.time() - bvec_start)
 
-        self.Amat *= (1-self.beta)
+
         # print("temp representation", self.temp_representation)
         # print("zvec", self.zvec)
+        outer_start = time.time()
         outer_prod= np.outer(self.zvec,self.temp_representation)
+        print("Time for outer product", time.time() - outer_start)
 
-
+        amat_start = time.time()
+        self.Amat *= (1-self.beta)
         self.Amat += (self.beta*outer_prod)
+
+        print("Time for amat update", time.time() - amat_start)
         # Since our current state representation is 1 hot, the square of the norm is just 1, so we can remove this term
         # alpha = 0.01/((np.square(np.linalg.norm(self.Amat))*np.square(np.linalg.norm(self.current_state_representation)))+1.0)
+        alpha_start = time.time()
         alpha = 0.01/((np.square(np.linalg.norm(self.Amat)))+1.0)
+        print("Time for alpha update", time.time() - alpha_start)
 
         # print("Bmat shape", self.Bmat.shape)
         # print("state", self.current_state_representation)
         # print("BMAT", self.Bmat)
         # bmat_dot = self.Bmat.dot(self.current_state_representation)
+        outer__prod_start = time.time()
         bmat_dot = self.Bmat[:, index]
 
         # print("Bmat dot", bmat_dot)
         # print("new bmat_dot", self.Bmat[:, index])
         # print("bmat dot shape", bmat_dot.shape)
         # print("A transpose", self.Amat.transpose())
-        a_transpose_dot = self.Amat.transpose().dot(bmat_dot)
+
+        a_transpose_dot = self.Amat.transpose() @ bmat_dot
         # print("A transpose dot", self.Amat.transpose().dot(bmat_dot))
-        amat_dot = self.Amat.dot(a_transpose_dot - self.current_state_representation)
+        amat_dot = self.Amat @ (a_transpose_dot - self.current_state_representation)
         # print("Amat dot", amat_dot)
         # outer_prod_a_current = np.outer(amat_dot,self.current_state_representation)
         outer_prod_a_current = np.zeros([self.mem_size, self.mem_size])
         outer_prod_a_current[:, index] = amat_dot
         # print("outer prod", outer_prod_a_current)
-        self.Bmat -= alpha*(outer_prod_a_current)
+        print("Outer prod a time", time.time() - outer__prod_start)
 
+        bmat_start = time.time()
+        self.Bmat -= alpha*(outer_prod_a_current)
+        print("time for bmat update", time.time() - bmat_start)
+
+        avec_start = time.time()
         self.nuvec *= (1-self.beta)
         # print("Zvec", self.zvec)
         self.nuvec += (self.beta*td_error*self.zvec)
 
-        avec = self.Bmat.transpose().dot(self.nuvec)
+        avec = self.Bmat.transpose() @ (self.nuvec)
+        print("Time for avec update", time.time() - avec_start)
 
-
+        retro_start = time.time()
         if self.use_retroactive:
             temp = self.c_max
             avec_square = np.multiply(avec,avec)
@@ -137,6 +154,8 @@ class UCLSAgent(Agent):
             if self.c_max != temp:
                 for i in range(self.mem_size):
                     self.Cmat[i,i] += self.cvec[i]*(self.c_max-temp)
+
+        print("time for retro update", time.time() - retro_start)
 
         # for i in range(self.mem_size):
         #     if self.zvec[i] <= self.beta:
@@ -149,11 +168,13 @@ class UCLSAgent(Agent):
         #         self.Cmat[i,j] += (self.beta*avec[i]*avec[j])
         # self.Cmat[index,index] *= (1-self.beta)
         # self.Cmat[index,index] += (self.beta*avec[index]*avec[index])
-        self.c_vec[index] *= (1-self.beta)
+        self.c_vec *= (1-self.beta)
         self.c_vec[index] += (self.beta *avec[index]*avec[index])
 
         weight_start = time.time()
-        x = self.bvec-self.Amat.dot(self.weights)
+        x = self.bvec-self.Amat @ (self.weights)
+        # Optimization, (B + eta) * x
+        # since eta is a diagonal matrix, this is equivalent
         self.weights += 0.1*(self.Bmat.transpose() @ x  + self.eta * x)
 
         # print(self.weights)
@@ -184,7 +205,7 @@ class UCLSAgent(Agent):
         if not done:
             start = time.time()
             next_action = self.policy(state)
-            print("Time to get policy", time.time() - start)
+            # print("Time to get policy", time.time() - start)
             self.populate_td_features(state,next_action)
         else:
             self.populate_td_features(state=None)
