@@ -13,12 +13,18 @@ import math
 import argparse
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib import pyplot as pet
 from utils.bayesianapproximator import *
 from utils.BNNApproximation import BNNApproximation
 from utils.ExperimentDescription import ExperimentDescription
 import utils.registry as registry
 from pickle import dump
+from agents.TabularQ import TabularQ
+import time
+from time import sleep
 
 
 def runExperiment(env, num_episodes, agent, render):
@@ -59,54 +65,64 @@ def runExperiment(env, num_episodes, agent, render):
 
 
 def averageOverRuns(Agent, Env, exp):
-  rewards = []
-  total_steps = []
-  for run in range(exp.runs):
-    env = Env(exp.env_params)
-    np.random.seed(run)
-    random.seed(run)
-    agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-    (steps, r) = runExperiment(env, exp.env_params['episodes'], agent, False)
-    rewards.append(r)
-    print("Completed a run")
-    total_steps.append(steps)
-    # print("Completed run %d of %d"%(, exp.runs)
+    rewards = []
+    total_steps = []
+    for run in range(exp.runs):
+        env = Env(exp.env_params)
+        np.random.seed(run)
+        random.seed(run)
+        agent = Agent(env.observationShape(), env.numActions(),
+                      exp.meta_parameters)
+        (steps, r) = runExperiment(env, exp.env_params['episodes'], agent,
+                                   False)
+        rewards.append(r)
+        #print("Completed a run")
+        total_steps.append(steps)
+        # print("Completed run %d of %d"%(, exp.runs)
+    metric = np.array(total_steps)
+    mean = metric.mean(axis=0)
+    stderr = metric.std(axis=0) / np.sqrt(exp.runs)
+    return (mean, stderr)
 
-  metric = np.array(total_steps)
-  mean = metric.mean(axis=0)
-  stderr = metric.std(axis=0) / np.sqrt(exp.runs)
-
-  return (mean, stderr)
 
 def confidenceInterval(mean, stderr):
-  return (mean - stderr, mean + stderr)
+    return (mean - stderr, mean + stderr)
+
 
 def plotRewards(ax, rewards, stderr, label):
-  (low_ci, high_ci) = confidenceInterval(rewards, stderr)
-  ax.plot(rewards, label=label)
-  ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
+    (low_ci, high_ci) = confidenceInterval(rewards, stderr)
+    ax.plot(rewards, label=label)
+    ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
+
 
 def parse_args():
-  parser = argparse.ArgumentParser("Bayesian exploration testbed")
-  parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
-  parser.add_argument("-e", type=str, help="path to experiment description json file")
-  parser.add_argument("-r", type=int, help="number of runs to complete")
-  parser.add_argument("-b", type=str, default='results', help="base path for saving results")
-  parser.add_argument("--render", action="store_true")
-  args = parser.parse_args()
-  if args.b == None or args.r == None or args.i == None:
-    print('Please run again using (without angle braces):')
-    print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
-    exit(1)
-
-  return args
+    parser = argparse.ArgumentParser("Bayesian exploration testbed")
+    parser.add_argument(
+        "-i", type=int, help="integer choosing parameter permutation to run")
+    parser.add_argument(
+        "-e", type=str, help="path to experiment description json file")
+    parser.add_argument("-r", type=int, help="number of runs to complete")
+    parser.add_argument(
+        "-b", type=str, default='results', help="base path for saving results")
+    parser.add_argument("--render", action="store_true")
+    args = parser.parse_args()
+    if args.b == None or args.r == None or args.i == None:
+        print('Please run again using (without angle braces):')
+        print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
+        exit(1)
+    return args
 
 
 args = parse_args()
-
 exp = ExperimentDescription(args.e, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
+
+# In case the render command causes issues, get ride of the lines in between dash lines, and add the following:
+# (rewards, stderr) = averageOverRuns(Agent, Env, exp)
+# np.save("tmp/BayesianQ_mean_rewards", rewards)
+
+# If the render command causes issues, get rid of the following lines: ---------
 if args.render:
     print("Render mode")
     env = Env(exp.env_params)
@@ -115,22 +131,14 @@ if args.render:
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
 
-    fig = plt.figure()
-    ax = plt.axes()
-    plotRewards(ax, rewards, stderr, 'Linear-Q')
-
-    plt.legend()
-    plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-    plt.xlabel("Number of Episodes")
-    plt.ylabel("Average Number of Steps to Reach Goal")
-    plt.show()
+    # np.save("tmp/BayesianQ_mean_rewards", rewards)
 
 # save some metric for performance to file
-    meanResult = np.mean(rewards)
-    path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
-    os.makedirs(path, exist_ok=True)
-    with open(f'{path}/mean.csv', 'w') as f:
-        f.write(str(meanResult))
+meanResult = np.mean(rewards)
+path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
+os.makedirs(path, exist_ok=True)
+with open(f'{path}/mean.csv', 'w') as f:
+    f.write(str(meanResult))
 
-    with open(f'{path}/results.pkl', 'wb') as f:
-        dump({"results": (rewards, stderr)}, f)
+with open(f'{path}/results.pkl', 'wb') as f:
+    dump({"results": (rewards, stderr)}, f)

@@ -1,4 +1,3 @@
-
 class Environment:
     def step(self, action):
         raise NotImplementedError()
