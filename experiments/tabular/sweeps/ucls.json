@@ -1,0 +1,22 @@
+{
+    "name": "UCLS Tabular Q",
+    "agent": "ucls tabular-q",
+    "environment": "gridworld",
+    "metaParameters": {
+        "alpha": [0.1, 0.2, 0.4, 0.8],
+        "c": [0.001, 0.004, 0.016, 0.064, 0.256],
+        "gamma": 0.9,
+        "p": 0.9,
+        "eta" : [0.0001],
+        "beta": [0.001, 0.002],
+        "c_max": [0.05,  0.1],
+        "lambdaa": 0,
+        "thompson_beta": [0.001]
+
+    },
+    "envParameters": {
+        "shape": [30, 30],
+        "steps": 700,
+        "episodes": 1000
+    }
+}

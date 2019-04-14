@@ -7,7 +7,7 @@ from agents.BnnRTabularQ import BnnRTabularQ
 from agents.RiverswimOptimal import Optimal
 from agents.UCB import UCB
 from agents.LinearQ_TDistR import TDistRLinearQ
-from agents.BayesianQLearningTabular import BayesianQLearningTabular
+from agents.UCLSAgent import UCLSAgent
 
 # environments
 from environments.gridworld import GridWorld
@@ -29,6 +29,9 @@ def getAgent(exp):
         return BnnRTabularQ
     if exp.agent == 'T-distribution-r linear-q':
         return TDistRLinearQ
+
+    if exp.agent == 'ucls tabular-q':
+        return UCLSAgent
 
     raise NotImplementedError
 

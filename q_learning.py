@@ -28,82 +28,40 @@ from time import sleep
 
 
 def runExperiment(env, num_episodes, agent, render):
-    total_reward = 0
-    rewards = []
-    steps = []
 
-    # For debugging: store action values and max variance
-    # num_states = np.prod(env.observationShape())
-    # num_acts = env.numActions()
-    # ac_vals_list = []
-    # agent.bayesianQ.mu_0  # prior sample mean
-    # agent.bayesianQ.nu_0  # prior "observations that make the prior mean"
-    # agent.bayesianQ.alpha_0  # prior IG shape
-    # agent.bayesianQ.beta_0  # prior IG scale
-    # prior_var = agent.bayesianQ.beta_0 * (agent.bayesianQ.nu_0 + 1) / (
-    #     agent.bayesianQ.alpha_0 * agent.bayesianQ.nu_0)
-    # t_dist_vars = []
-    # for j in range(num_acts):
-    #     l_a = []
-    #     for i in range(num_states):
-    #         l_s = []
-    #         l_s.append(prior_var)
-    #         l_a.append(l_s)
-    #     t_dist_vars.append(l_a)
-    # max_var_T = []
+  total_reward = 0
+  rewards = []
+  steps = []
 
-    for episode in range(num_episodes):
-        s = env.reset()
-        a = agent.start(s)
-        done = False
-        step = 0
+  for episode in range(num_episodes):
+    s = env.reset()
+    a = agent.start(s)
+    done = False
 
-        while not done:
-            if render:
-                # print("Render env")
-                env.render()
-                time.sleep(0.07)
+    step = 0
 
-            (sp, r, done, __) = env.step(a)  # Note: the environment "registers" the new sp as env.pos
-            agent.update(s, sp, r, a, done)
+    while not done:
+      if render:
+          print("Render env")
+          env.render()
 
-            # For debugging: store the t-distribution variance and action_values at each timestep:
-            # s_idx = np.ravel_multi_index(s, agent.state_shape)
-            # x = agent.getIndex(s) + (a * num_states)
-            # nu = agent.bayesianQ.B[x, 1]
-            # alpha = agent.bayesianQ.B[x, 2]
-            # beta = agent.bayesianQ.B[x, 3]
-            # t_distribution_var = beta * (nu + 1) / (alpha * nu)
-            # t_dist_vars[a][s_idx].append(t_distribution_var)
-            # ac_vals_list.append(agent.act_vals)
+      (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
+      agent.update(s, sp, r, a, done)
 
-            # For debugging: store the maximum variance for each timestep:
-            # var_single_timestep = []
-            # for x_i in range(num_states * num_acts):
-            #     nu_i = agent.bayesianQ.B[x_i, 1]
-            #     alpha_i = agent.bayesianQ.B[x_i, 2]
-            #     beta_i = agent.bayesianQ.B[x_i, 3]
-            #     t_distribution_var = beta_i * (nu_i + 1) / (nu_i * alpha_i)
-            #     var_single_timestep.append(t_distribution_var)
-            # max_var_T.append(np.max(var_single_timestep))
-            # data_dict = {'max_var_T_array': max_var_T}
+      s = sp # update the current state to sp
+      a = agent.getAction(s) # update the current action to a
+      # print("State action pair", s, a)
+      print(step)
+      total_reward += r
+      rewards.append(total_reward)
 
-            s = sp
-            a = agent.getAction(s)
-            # print(agent.act_vals)
-            total_reward += r
-            rewards.append(total_reward)
-            step += 1
-        steps.append(step)
-        #print("Episode", episode, " Step", step)
+      step += 1
 
-    # data_dict2 = {
-    #         't_dist_var_along_trajectory': t_dist_vars,
-    #         'ac_vals_along_trajectory': ac_vals_list,
-    #     }
-    # np.save("tmp/BayesianQ_trajectory", data_dict2)
-    # np.save("tmp/BayesianQ_maxt_dist_variances", data_dict)
-    return (steps, rewards)
+    steps.append(step)
+    print("Episode", episode, " Step", step)
+    # agent.print()
+
+  return (steps, rewards)
 
 
 def averageOverRuns(Agent, Env, exp):
