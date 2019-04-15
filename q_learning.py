@@ -95,7 +95,7 @@ def runExperiment(env, num_episodes, agent, render):
             rewards.append(total_reward)
             step += 1
         steps.append(step)
-        #print("Episode", episode, " Step", step)
+        print("Episode", episode, " Step", step)
 
     # data_dict2 = {
     #         't_dist_var_along_trajectory': t_dist_vars,
