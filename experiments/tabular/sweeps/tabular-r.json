@@ -3,13 +3,13 @@
     "agent": "tabular-r tabular-q",
     "environment": "gridworld",
     "metaParameters": {
-        "alpha": 0.0,
+        "alpha": 0.1,
         "epsilon": [0.0, 0.05, 0.1, 0.2],
         "gamma": 0.9,
 	"mu_0": [0.0, 1.0, 10.0],
 	"nu_0": 1.0,
 	"alpha_0": [0.5, 1.0, 1.1, 1.5, 2.0],
-	"beta_0": [1.0, 2.0, 3.0]	
+	"beta_0": [1.0, 2.0, 3.0]
     },
     "envParameters": {
         "shape": [30, 30],
