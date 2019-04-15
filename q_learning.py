@@ -33,24 +33,29 @@ def runExperiment(env, num_episodes, agent, render):
     steps = []
 
     # For debugging: store action values and max variance
-    # num_states = np.prod(env.observationShape())
-    # num_acts = env.numActions()
+    num_states = np.prod(env.observationShape())
+    num_acts = env.numActions()
     # ac_vals_list = []
-    # agent.bayesianQ.mu_0  # prior sample mean
-    # agent.bayesianQ.nu_0  # prior "observations that make the prior mean"
-    # agent.bayesianQ.alpha_0  # prior IG shape
-    # agent.bayesianQ.beta_0  # prior IG scale
-    # prior_var = agent.bayesianQ.beta_0 * (agent.bayesianQ.nu_0 + 1) / (
-    #     agent.bayesianQ.alpha_0 * agent.bayesianQ.nu_0)
-    # t_dist_vars = []
-    # for j in range(num_acts):
-    #     l_a = []
-    #     for i in range(num_states):
-    #         l_s = []
-    #         l_s.append(prior_var)
-    #         l_a.append(l_s)
-    #     t_dist_vars.append(l_a)
-    # max_var_T = []
+    agent.rewardApprox.nu_0  # prior "observations that make the prior mean"
+    agent.rewardApprox.alpha_0  # prior IG shape
+    agent.rewardApprox.beta_0  # prior IG scale
+    prior_var = agent.rewardApprox.beta_0 * (agent.rewardApprox.nu_0 + 1) / (
+        agent.rewardApprox.alpha_0 * agent.rewardApprox.nu_0)
+    t_dist_vars = []
+    bonuses = []
+    for j in range(num_acts):
+        l_a = []
+        b_a = []
+        for i in range(num_states):
+            l_s = []
+            l_s.append(prior_var)
+            l_a.append(l_s)
+            b_s = []
+            b_a.append(b_s)
+        t_dist_vars.append(l_a)
+        bonuses.append(b_a)
+    max_var_T = []
+    max_bonus = []
 
     for episode in range(num_episodes):
         s = env.reset()
@@ -67,26 +72,33 @@ def runExperiment(env, num_episodes, agent, render):
             (sp, r, done, __) = env.step(a)  # Note: the environment "registers" the new sp as env.pos
             agent.update(s, sp, r, a, done)
 
-            # For debugging: store the t-distribution variance and action_values at each timestep:
-            # s_idx = np.ravel_multi_index(s, agent.state_shape)
-            # x = agent.getIndex(s) + (a * num_states)
-            # nu = agent.bayesianQ.B[x, 1]
-            # alpha = agent.bayesianQ.B[x, 2]
-            # beta = agent.bayesianQ.B[x, 3]
-            # t_distribution_var = beta * (nu + 1) / (alpha * nu)
-            # t_dist_vars[a][s_idx].append(t_distribution_var)
+            # For debugging: store the t-distribution variance at each timestep:
+            # mu, nu, alpha, beta = self.B[x, :]
+            s_idx = np.ravel_multi_index(s, agent.state_shape)
+            x = agent.getIndex(s) + (a * num_states)
+            nu = agent.rewardApprox.B[x, 1]
+            alpha = agent.rewardApprox.B[x, 2]
+            beta = agent.rewardApprox.B[x, 3]
+            t_distribution_var = beta * (nu + 1) / (alpha * nu)
+            t_dist_vars[a][s_idx].append(t_distribution_var)
+            bonuses[a][s_idx] = agent.rewardApprox.bonus
             # ac_vals_list.append(agent.act_vals)
 
             # For debugging: store the maximum variance for each timestep:
-            # var_single_timestep = []
-            # for x_i in range(num_states * num_acts):
-            #     nu_i = agent.bayesianQ.B[x_i, 1]
-            #     alpha_i = agent.bayesianQ.B[x_i, 2]
-            #     beta_i = agent.bayesianQ.B[x_i, 3]
-            #     t_distribution_var = beta_i * (nu_i + 1) / (nu_i * alpha_i)
-            #     var_single_timestep.append(t_distribution_var)
-            # max_var_T.append(np.max(var_single_timestep))
-            # data_dict = {'max_var_T_array': max_var_T}
+            var_single_timestep = []
+            bonus_single_timestep = []
+            for x_i in range(num_states * num_acts):
+                nu_i = agent.rewardApprox.B[x_i, 1]
+                alpha_i = agent.rewardApprox.B[x_i, 2]
+                beta_i = agent.rewardApprox.B[x_i, 3]
+                t_distribution_var = beta_i * (nu_i + 1) / (nu_i * alpha_i)
+                var_single_timestep.append(t_distribution_var)
+                bonus_single_timestep.append(agent.rewardApprox.bonus)
+            max_var_T.append(np.max(var_single_timestep))
+            max_bonus.append(np.max(bonus_single_timestep))
+            data_dict_max_var = {'max_var_T_array': max_var_T,
+                                 'max_bonus': max_bonus
+                }
 
             s = sp
             a = agent.getAction(s)
@@ -97,12 +109,12 @@ def runExperiment(env, num_episodes, agent, render):
         steps.append(step)
         print("Episode", episode, " Step", step)
 
-    # data_dict2 = {
-    #         't_dist_var_along_trajectory': t_dist_vars,
-    #         'ac_vals_along_trajectory': ac_vals_list,
-    #     }
-    # np.save("tmp/BayesianQ_trajectory", data_dict2)
-    # np.save("tmp/BayesianQ_maxt_dist_variances", data_dict)
+    data_dict2 = {
+            't_dist_var_along_trajectory': t_dist_vars,
+            'all_bonuses': bonuses
+        }
+    np.save("tmp/TabR_TabQ_maxvars", data_dict_max_var)
+    np.save("tmp/TabR_TabQ_trajectory", data_dict2)
     return (steps, rewards)
 
 
