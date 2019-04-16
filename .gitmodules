@@ -4,3 +4,6 @@
 [submodule "gym-minigrid"]
 	path = gym-minigrid
 	url = https://github.com/maximecb/gym-minigrid
+[submodule "brb-results-2"]
+	path = brb-results-2
+	url = https://github.com/ParashRahman/brb-results-2
