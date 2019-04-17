@@ -3,6 +3,7 @@ from agents.TabularQ import TabularQ
 from agents.LinearQ import LinearQ
 from agents.TabularRTabularQ import TabularRTabularQ
 from agents.BnnRTabularQ import BnnRTabularQ
+from agents.BayesianQLearningTabular import BayesianQLearningTabular
 
 from agents.RiverswimOptimal import Optimal
 from agents.UCB import UCB
