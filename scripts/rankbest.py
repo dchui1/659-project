@@ -1,45 +1,41 @@
 import os
+import sys
+import numpy as np
 
-# FOR TABULAR RESULTS
-tabular_location = "bayesian-exploration-results/tabular/gridworld/"
-linearQ_location = "bayesian-exploration-results/tabular/cts-gridworld/"
-blr_tabularQ_loc = "bayesian-exploration-results/blr/gridworld/"
 
-def process_agent_results(file_location):
-    agents = os.listdir(file_location)
+def get_best_result(path):
+    sweep_dirs = os.listdir(path)
+    parameter_sweeps = {}
+    for dir in sweep_dirs:
 
-    agent_results = {}
-    agents = filter(lambda elem: elem != "ucb", agents)
+        sweep_path = path + dir + "/"
+        run_dirs = os.listdir(sweep_path)
 
-    for agent in agents:
-        agent_folder = file_location + agent + "/"
-        parameterizations = os.listdir(agent_folder)
-    
-        results = []
-        for param in parameterizations:
-            param_folder = agent_folder + param + "/"
-            runs = os.listdir(param_folder)
-            runs = filter(lambda elem: elem != "mean.csv", runs)
-       
-            param_results = []
-            for run in runs:
-                f = open(param_folder + run + "/mean.csv", "r")
-                value = float(f.read())
-                param_results.append(value)
+        means = [read_mean(sweep_path + run_dir + "/mean.csv") for run_dir in run_dirs]
+        # print(run_folder)
+        # print(len(means))
+        parameter_sweeps[dir] = np.mean(means)
+        # mean_file = list(filter(lambda x: x == "mean.csv", os.listdir(run_folder)))[0]
+        # print(mean_file)
+        # f = open(run_folder + run + "/mean.csv", "r")
+        # value = float(f.read())
+        # print(value)
+                # runs = filter(lambda elem: elem != "mean.csv", runs)
+    # print(parameter_sweeps)
+    s = [(k, parameter_sweeps[k]) for k in sorted(parameter_sweeps, key=parameter_sweeps.get)]
+    print(s[0])
 
-                results.append((param, sum(param_results) / len(param_results), len(param_results)))
+def read_mean(path):
+    f = open(path, "r")
+    value = float(f.read())
+    return value
 
-        results = sorted(results, key=lambda elem: elem[1])[:10]
-        agent_results[agent] = results
-    return agent_results
 
-agent_results = {**process_agent_results(tabular_location),
-                 **process_agent_results(linearQ_location),
-                 **process_agent_results(blr_tabularQ_loc)}
+def main():
+    path = sys.argv[1]
+    get_best_result(path)
+    # print(path)
 
-for agent, results in agent_results.items():
-    print("RESULTS FOR AGENT: " + agent)
-    for res in results:
-        print(res[0], res[1], res[2])
-    
-# FOR LINEAR FUNCTION APPROXIMATION
+
+if __name__ == "__main__":
+    main()
