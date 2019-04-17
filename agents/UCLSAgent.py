@@ -91,25 +91,25 @@ class UCLSAgent(Agent):
 
         self.bvec *= (1-self.beta)
         self.bvec[index] += (self.beta*self.zvec[index]*reward)
-        print("Time for bvec update", time.time() - bvec_start)
+        # print("Time for bvec update", time.time() - bvec_start)
 
 
         # print("temp representation", self.temp_representation)
         # print("zvec", self.zvec)
         outer_start = time.time()
         outer_prod= np.outer(self.zvec,self.temp_representation)
-        print("Time for outer product", time.time() - outer_start)
+        # print("Time for outer product", time.time() - outer_start)
 
         amat_start = time.time()
         self.Amat *= (1-self.beta)
         self.Amat += (self.beta*outer_prod)
 
-        print("Time for amat update", time.time() - amat_start)
+        # print("Time for amat update", time.time() - amat_start)
         # Since our current state representation is 1 hot, the square of the norm is just 1, so we can remove this term
         # alpha = 0.01/((np.square(np.linalg.norm(self.Amat))*np.square(np.linalg.norm(self.current_state_representation)))+1.0)
         alpha_start = time.time()
         alpha = 0.01/((np.square(np.linalg.norm(self.Amat)))+1.0)
-        print("Time for alpha update", time.time() - alpha_start)
+        # print("Time for alpha update", time.time() - alpha_start)
 
         # print("Bmat shape", self.Bmat.shape)
         # print("state", self.current_state_representation)
@@ -131,11 +131,11 @@ class UCLSAgent(Agent):
         outer_prod_a_current = np.zeros([self.mem_size, self.mem_size])
         outer_prod_a_current[:, index] = amat_dot
         # print("outer prod", outer_prod_a_current)
-        print("Outer prod a time", time.time() - outer__prod_start)
+        # print("Outer prod a time", time.time() - outer__prod_start)
 
         bmat_start = time.time()
         self.Bmat -= alpha*(outer_prod_a_current)
-        print("time for bmat update", time.time() - bmat_start)
+        # print("time for bmat update", time.time() - bmat_start)
 
         avec_start = time.time()
         self.nuvec *= (1-self.beta)
@@ -143,7 +143,7 @@ class UCLSAgent(Agent):
         self.nuvec += (self.beta*td_error*self.zvec)
 
         avec = self.Bmat.transpose() @ (self.nuvec)
-        print("Time for avec update", time.time() - avec_start)
+        # print("Time for avec update", time.time() - avec_start)
 
         retro_start = time.time()
         if self.use_retroactive:
@@ -156,7 +156,7 @@ class UCLSAgent(Agent):
                     pass
                     # self.Cmat[i,i] += self.cvec[i]*(self.c_max-temp)
 
-        print("time for retro update", time.time() - retro_start)
+        # print("time for retro update", time.time() - retro_start)
 
         # for i in range(self.mem_size):
         #     if self.zvec[i] <= self.beta:
@@ -183,8 +183,8 @@ class UCLSAgent(Agent):
         # print("A mat", self.Amat)
         # print("B mat", self.Bmat)
         #
-        print("Time for step all", time.time() - step_start)
-        print("Time for weights update", time.time() - weight_start)
+        # print("Time for step all", time.time() - step_start)
+        # print("Time for weights update", time.time() - weight_start)
 
 
 
