@@ -18,7 +18,6 @@ import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib import pyplot as pet
 from utils.bayesianapproximator import *
-from utils.BNNApproximation import BNNApproximation
 from utils.ExperimentDescription import ExperimentDescription
 import utils.registry as registry
 from pickle import dump
