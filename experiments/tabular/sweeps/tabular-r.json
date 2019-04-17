@@ -4,15 +4,15 @@
     "environment": "gridworld",
     "metaParameters": {
         "alpha": 0.1,
-        "epsilon": [0.0, 0.05, 0.1, 0.2],
+        "epsilon": [0.05, 0.1, 0.2],
         "gamma": 0.9,
 	"mu_0": [0.0, 1.0, 10.0],
 	"nu_0": 1.0,
-	"alpha_0": [0.5, 1.0, 1.1, 1.5, 2.0],
+	"alpha_0": [0.5, 1.0, 1.5, 2.0],
 	"beta_0": [1.0, 2.0, 3.0]
     },
     "envParameters": {
-        "shape": [30, 30],
+        "shape": [15, 15],
         "steps": 1300,
         "episodes": 1000
     }
