@@ -54,13 +54,13 @@ class TabularBayesianApproximation(BayesianApproximator):
         super().__init__(state_dimensions, num_acts)
         num_states = np.prod(state_dimensions)
         self.state_shape = state_dimensions
-        self.B = np.zeros((num_states * num_acts, 4))
+        self.B = np.zeros((num_states * num_acts, 5))
         self.mu_0 = params["mu_0"]  # prior sample mean
         self.nu_0 = params["nu_0"]  # prior "observations that make the prior mean"
         self.alpha_0 = params["alpha_0"]  # prior IG shape
         self.beta_0 = params["beta_0"]  # prior IG scale
-
-        self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0]
+        self.b_max = -float("inf")
+        self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0, self.b_max]
 
         # To update beta, we need to keep track of the following 3 values for each (s,a)
         self.empirical_mean = np.zeros((num_states * num_acts))
@@ -83,7 +83,7 @@ class TabularBayesianApproximation(BayesianApproximator):
             * 0.5 * np.square(self.empirical_mean[x] - self.mu_0))
 
     def sample(self, x, n, use_stddev=False):
-        mu, nu, alpha, beta = self.B[x, :]
+        mu, nu, alpha, beta, b_max = self.B[x, :]
         scale = max(0, beta * (nu + 1) / (alpha * nu)) # Make sure that the scale is >= 0
         df = 2 * alpha
         try:
@@ -91,8 +91,13 @@ class TabularBayesianApproximation(BayesianApproximator):
         except:
             print(scale)
             exit()
-        bonus = np.maximum(r, 0.0) - np.average(r)
-        return bonus.max()
+        # bonus = np.maximum(r, 0.0).max() - np.average(r)
+        # max_b = bonus.max()
+        bonus = np.max(r) - np.average(r)
+        self.B[x, 4] = max(b_max, bonus)
+        normalized_bonus = bonus / self.B[x, 4]
+        b = max(normalized_bonus, 0)
+        return b
 
 
 # class TabularBayesianApproximation_one_step_update(BayesianApproximator):
