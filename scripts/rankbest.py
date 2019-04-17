@@ -9,7 +9,7 @@ def get_best_result(path):
     for dir in sweep_dirs:
 
         sweep_path = path + dir + "/"
-        run_dirs = os.listdir(sweep_path)
+        run_dirs = filter(lambda x: x != ".DS_Store", os.listdir(sweep_path))
 
         means = [read_mean(sweep_path + run_dir + "/mean.csv") for run_dir in run_dirs]
         # print(run_folder)
