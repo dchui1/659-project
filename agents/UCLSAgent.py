@@ -153,7 +153,8 @@ class UCLSAgent(Agent):
                 self.c_max = np.max(avec_square)
             if self.c_max != temp:
                 for i in range(self.mem_size):
-                    self.Cmat[i,i] += self.cvec[i]*(self.c_max-temp)
+                    pass
+                    # self.Cmat[i,i] += self.cvec[i]*(self.c_max-temp)
 
         print("time for retro update", time.time() - retro_start)
 
