@@ -4,17 +4,18 @@ import numpy as np
 
 
 def get_best_result(path):
-    sweep_dirs = os.listdir(path)
+    sweep_dirs = list(filter(lambda x: x != ".DS_Store", os.listdir(path)))
     parameter_sweeps = {}
     for dir in sweep_dirs:
 
         sweep_path = path + dir + "/"
-        run_dirs = filter(lambda x: x != ".DS_Store", os.listdir(sweep_path))
+        run_dirs = list(filter(lambda x: x != ".DS_Store", os.listdir(sweep_path)))
 
         means = [read_mean(sweep_path + run_dir + "/mean.csv") for run_dir in run_dirs]
         # print(run_folder)
         # print(len(means))
-        parameter_sweeps[dir] = np.mean(means)
+        if len(run_dirs) > 4:
+            parameter_sweeps[dir] = np.mean(means)
         # mean_file = list(filter(lambda x: x == "mean.csv", os.listdir(run_folder)))[0]
         # print(mean_file)
         # f = open(run_folder + run + "/mean.csv", "r")

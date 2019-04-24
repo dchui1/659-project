@@ -3,10 +3,31 @@ import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
+
 
 def main():
-    path = sys.argv[1]
-    aggregate_results(path)
+    args = parse_args()
+    path = args.path
+
+
+    (mean, stderr) = aggregate_results(path)
+    if args.save:
+        print("Save called")
+        agent = args.agent
+        with open(f'{agent}.pkl', 'wb') as f:
+            pickle.dump({"results": (mean, stderr)}, f)
+
+    fig = plt.figure()
+    ax = plt.axes()
+    plotRewards(ax, mean, stderr, "title")
+
+
+    plt.legend()
+    plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+    plt.xlabel("Number of Episodes")
+    plt.ylabel("Average Number of Steps to Reach Goal")
+    plt.show()
 
 
 def aggregate_results(path):
@@ -20,23 +41,14 @@ def aggregate_results(path):
         f = open(fileName, 'rb')
         data_dict = pickle.load(f)
         steps = data_dict["results"]
-        if len(steps) == 1300:
 
-            all_steps.append(steps)
+        all_steps.append(steps)
 
     (mean, stderr) = averageOverRuns(all_steps)
 
-    fig = plt.figure()
-    ax = plt.axes()
-    plotRewards(ax, mean, stderr, fileName)
+    return (mean, stderr)
 
-
-    plt.legend()
-    plt.title("Average Number of Steps to Reach Goal across 5 Runs")
-    plt.xlabel("Number of Episodes")
-    plt.ylabel("Average Number of Steps to Reach Goal")
-    plt.show()
-    print(mean, stderr)
+    # print(mean, stderr)
     # print(all_steps)
 
 def averageOverRuns(runResults):
@@ -54,8 +66,7 @@ def averageOverRuns(runResults):
   #   total_steps.append(steps)
     # print("Completed run %d of %d"%(, exp.runs)
   # print(len(runResults), "run results length")
-  print(len(runResults))
-  [print(len(subArray)) for subArray in runResults]
+
   # print(len(runResults[0]))
   # print(len(runResults[50]))
 
@@ -78,5 +89,12 @@ def plotRewards(ax, rewards, stderr, label):
 def confidenceInterval(mean, stderr):
     return (mean - stderr, mean + stderr)
 
+def parse_args():
+    parser = argparse.ArgumentParser("Process results")
+    parser.add_argument("-path", type=str, help="path to parameter sweep")
+    parser.add_argument("-agent", type=str, help="name of the agent")
+    parser.add_argument("--save", action="store_true")
+    args = parser.parse_args()
+    return args
 if __name__ == "__main__":
     main()

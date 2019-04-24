@@ -16,13 +16,13 @@ def main():
         f1 = open(fileName, 'rb')
         data_dict = pickle.load(f1)
         (steps, stderr) = data_dict["results"]
-        runResults.append(steps)
-    (steps, stderr) = averageOverRuns(runResults)
-    plotRewards(ax, steps, stderr, fileName)
+        # runResults.append(steps)
+    # (steps, stderr) = averageOverRuns(runResults)
+        plotRewards(ax, steps, stderr, fileName.replace(".pkl", ""))
 
 
     plt.legend()
-    plt.title("Average Number of Steps to Reach Goal across 5 Runs")
+    plt.title("Average Number of Steps to Reach Goal")
     plt.xlabel("Number of Episodes")
     plt.ylabel("Average Number of Steps to Reach Goal")
     plt.show()
@@ -36,25 +36,7 @@ def plotRewards(ax, rewards, stderr, label):
 def confidenceInterval(mean, stderr):
   return (mean - stderr, mean + stderr)
 
-def averageOverRuns(runResults):
-  # rewards = []
-  # total_steps = []
-  # for run in runResults:
-  #   env = Env(exp.env_params)
-  #   np.random.seed(run)
-  #   random.seed(run)
-  #   agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-  #   (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
-  #   rewards.append(r)
-  #   print("Completed a run")
-  #   total_steps.append(steps)
-    # print("Completed run %d of %d"%(, exp.runs)
 
-  metric = np.array(runResults)
-  mean = metric.mean(axis=0)
-  stderr = metric.std(axis=0) / np.sqrt(len(runResults))
-
-  return (mean, stderr)
 
 if __name__ == "__main__":
     main()
