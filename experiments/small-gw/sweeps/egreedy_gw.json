@@ -1,14 +1,15 @@
 {
     "name": "tabular",
     "agent": "tabular-q",
-    "environment": "riverswim",
+    "environment": "gridworld",
     "metaParameters": {
         "alpha": [0.1, 0.2, 0.4, 0.8],
         "epsilon": [0.05, 0.1, 0.15, 0.2],
         "gamma": 0.9
     },
     "envParameters": {
-        "steps": 10000,
-        "episodes": 1
+        "steps": 0,
+        "episodes": 1000,
+        "shape": [50, 50]
     }
 }

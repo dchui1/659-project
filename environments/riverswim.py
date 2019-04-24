@@ -4,8 +4,8 @@ import random
 
 class RiverSwim(Environment):
   steps = 0
-  def __init__(self):
-    self.STEPS_LIMIT = 10000 # number of steps in each episode?
+  def __init__(self, params):
+    self.STEPS_LIMIT = params['steps'] # number of steps in each episode?
     self.pos = 0
     self.swimRightStay = 0.6
     self.swimRightUp = 0.35
@@ -16,7 +16,7 @@ class RiverSwim(Environment):
   def reset(self):
       self.steps = 0
       self.pos = 0
-      return self.pos
+      return [self.pos]
 
   def step(self, a): # the transition function?
     old_pos = self.pos
@@ -44,7 +44,7 @@ class RiverSwim(Environment):
     # tuple indicating (state, reward, terminated, action)
     # note this is a continuing task, so the environment will only
     # terminate when max number of steps is reached
-    return (self.pos, self.rewardFunction(old_pos, a), done, a)
+    return ([self.pos], self.rewardFunction(old_pos, a), done, a)
 
   def rewardFunction(self, x, a):
     if x >= 5 and a == 1:

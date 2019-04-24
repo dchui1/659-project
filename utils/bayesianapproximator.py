@@ -60,6 +60,7 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.alpha_0 = params["alpha_0"]  # prior IG shape
         self.beta_0 = params["beta_0"]  # prior IG scale
         self.q = params["q"]
+        self.w = params["w"]
         self.b_max = -float("inf")
         self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0, self.b_max]
 
@@ -92,11 +93,11 @@ class TabularBayesianApproximation(BayesianApproximator):
         scale = max(0, beta * (nu + 1) / (alpha * nu)) # Make sure that the scale is >= 0
         df = 2 * alpha
         try:
-            r = t.ppf(q=0.68, df=df, loc=mu, scale=scale) # try with loc = 0?
+            r = t.ppf(q=self.q, df=df, loc=mu, scale=scale) # try with loc = 0?
         except:
             print(scale)
             exit()
-        b = r - mu # same as initially having loc = 0 (default) above
+        b = self.w * (r - mu) # same as initially having loc = 0 (default) above
         # print(b)
         self.bonus = b
         return self.bonus
