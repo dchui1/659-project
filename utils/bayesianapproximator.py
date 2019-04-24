@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import math
 import scipy
-from scipy.stats import t
+from scipy.stats.distributions import t
 import matplotlib.pyplot as plt
 from utils.tf_supervised_inference.distributions import T, MultivariateNormalInverseGamma, InverseGamma, MultivariateNormal
 from utils.tf_supervised_inference.linear_model import LinearModel
@@ -59,6 +59,7 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.nu_0 = params["nu_0"]  # prior "observations that make the prior mean"
         self.alpha_0 = params["alpha_0"]  # prior IG shape
         self.beta_0 = params["beta_0"]  # prior IG scale
+        self.q = params["q"]
         self.b_max = -float("inf")
         self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0, self.b_max]
 
@@ -68,6 +69,7 @@ class TabularBayesianApproximation(BayesianApproximator):
             (num_states * num_acts))  # local count for each (s, a) pair
         self.local_sum_sq = np.zeros((num_states * num_acts))
         self.xmean = np.zeros((num_states * num_acts)) # xi * mean
+        self.bonus = None
 
     def update_stats(self, x, val=0.0):
         self.n[x] += 1  # local count
@@ -85,22 +87,19 @@ class TabularBayesianApproximation(BayesianApproximator):
             + (self.n[x] * self.nu_0) / (self.nu_0 + self.n[x])
             * 0.5 * np.square(self.empirical_mean[x] - self.mu_0))
 
-    def sample(self, x, n, use_stddev=False):
+    def sample(self, x, use_stddev=False):
         mu, nu, alpha, beta, b_max = self.B[x, :]
         scale = max(0, beta * (nu + 1) / (alpha * nu)) # Make sure that the scale is >= 0
         df = 2 * alpha
         try:
-            r = t.rvs(df=df, loc=mu, scale=scale, size=n)
+            r = t.ppf(q=0.68, df=df, loc=mu, scale=scale) # try with loc = 0?
         except:
             print(scale)
             exit()
-        # bonus = np.maximum(r, 0.0).max() - np.average(r)
-        # max_b = bonus.max()
-        bonus = np.max(r) - np.average(r)
-        self.B[x, 4] = max(b_max, bonus)
-        normalized_bonus = bonus / self.B[x, 4]
-        b = max(normalized_bonus, 0)
-        return b
+        b = r - mu # same as initially having loc = 0 (default) above
+        # print(b)
+        self.bonus = b
+        return self.bonus
 
 
 # class TabularBayesianApproximation_one_step_update(BayesianApproximator):
