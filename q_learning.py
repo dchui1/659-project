@@ -46,18 +46,21 @@ def runExperiment(env, num_episodes, agent, render):
 
       (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
       agent.update(s, sp, r, a, done)
-
+      # if a == 0:
+      #     print(s)
+      #     print(sp)
+      # print("")
       s = sp # update the current state to sp
       a = agent.getAction(s) # update the current action to a
       # print("State action pair", s, a)
       # print(step)
       total_reward += r
-      rewards.append(total_reward)
+      rewards.append(total_reward) # uncomment
 
       step += 1
 
     steps.append(step)
-    print("Episode", episode, " Step", step)
+    print("Episode", episode, " Total_Reward", total_reward)
     # agent.print()
 
   return (steps, rewards)

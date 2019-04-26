@@ -5,13 +5,18 @@ import random
 class RiverSwim(Environment):
   steps = 0
   def __init__(self, params):
-    self.STEPS_LIMIT = params['steps'] # number of steps in each episode?
+    self.STEPS_LIMIT = params['steps'] # number of steps in episode (set to 5000)
     self.pos = 0
     self.swimRightStay = 0.6
-    self.swimRightUp = 0.35
-    self.swimRightDown = 0.05
-    self.S1swimRightUp = 0.6
-    self.SNswimRightDown = 0.4
+    self.swimRightUp = 0.3
+    self.swimRightDown = 0.1
+
+    self.S1swimRightStay = 0.7
+    self.S1swimRightUp = 0.3
+
+    self.SNswimRightDown = 0.7
+    self.SNswimRightStay = 0.3
+
 
   def reset(self):
       self.steps = 0
@@ -35,6 +40,11 @@ class RiverSwim(Environment):
           self.pos = self.pos - 1
         elif flip > self.swimRightDown + self.swimRightStay:
           self.pos = self.pos + 1
+
+    # Do we need the following lines for the elif statement?
+    elif a == 0: # make sure we always more to the left if we take action 0
+        self.pos = np.clip(self.pos - 1, 0, 5)
+
     # make sure that the position we return (the next state) is between 0 and 5
     self.pos = np.clip(self.pos, 0, 5)
 
@@ -48,9 +58,9 @@ class RiverSwim(Environment):
 
   def rewardFunction(self, x, a):
     if x >= 5 and a == 1:
-      return 1.0
+      return 10000 # maybe change to 10
     if x <= 0 and a == 0:
-      return 5.0/1000.0
+      return 5.0
     return 0.0
 
   def observationShape(self):

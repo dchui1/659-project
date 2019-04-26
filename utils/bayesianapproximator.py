@@ -94,10 +94,12 @@ class TabularBayesianApproximation(BayesianApproximator):
         df = 2 * alpha
         try:
             r = t.ppf(q=self.q, df=df, loc=mu, scale=scale) # try with loc = 0?
+            # mean_t = t.mean(df=df, loc=mu, scale=scale)
         except:
             print(scale)
             exit()
-        b = self.w * (r - mu) # same as initially having loc = 0 (default) above
+        # b = self.w * (r - mean_t) # same as initially having loc = 0 (default) above
+        b = self.w * (r - mu)
         # print(b)
         self.bonus = b
         return self.bonus
