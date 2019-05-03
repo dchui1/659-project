@@ -9,3 +9,5 @@ results/
 sparse/build
 tmp/
 figs/
+.DS_Store
+*.pkl

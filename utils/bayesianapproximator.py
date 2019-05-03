@@ -67,18 +67,21 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.n = np.zeros(
             (num_states * num_acts))  # local count for each (s, a) pair
         self.local_sum_sq = np.zeros((num_states * num_acts))
+        self.xmean = np.zeros((num_states * num_acts)) # xi * mean
 
     def update_stats(self, x, val=0.0):
         self.n[x] += 1  # local count
         self.empirical_mean[x] += (val - self.empirical_mean[x]) / self.n[x]
         self.local_sum_sq[x] += np.square(val)
+        self.xmean[x] += self.empirical_mean[x] * val
 
         self.B[x, 0] = (self.nu_0 * self.mu_0 + self.n[x] *
                         self.empirical_mean[x]) / (self.nu_0 + self.n[x])
         self.B[x, 1] = self.nu_0 + self.n[x]
         self.B[x, 2] = self.alpha_0 + self.n[x] / 2
-        self.B[x, 3] = (self.beta_0 + 0.5
-            * (self.local_sum_sq[x] - self.n[x] * np.square(self.empirical_mean[x]))
+        self.B[x, 3] = ((self.beta_0 + 0.5
+            * (self.local_sum_sq[x] - self.n[x] * np.square(self.empirical_mean[x])))
+            + 0.5 * (self.local_sum_sq[x] -2 * self.n[x] * self.xmean[x] + np.square(self.empirical_mean[x]))
             + (self.n[x] * self.nu_0) / (self.nu_0 + self.n[x])
             * 0.5 * np.square(self.empirical_mean[x] - self.mu_0))
 
