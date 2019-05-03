@@ -11,3 +11,5 @@ tmp/
 figs/
 .DS_Store
 *.pkl
+plots/
+plots.zip
