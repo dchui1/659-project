@@ -9,6 +9,7 @@ def main():
 
     fig = plt.figure()
     ax = plt.axes()
+    plt.ylim(0.0, 50000) # only use for GridWorld experiments (keep the same ylim)
     # plotRewards(ax, rewards, stderr, fileName)
     runResults = []
     for i in range(1, len(sys.argv)):
