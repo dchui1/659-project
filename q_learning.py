@@ -36,7 +36,6 @@ def runExperiment(env, num_episodes, agent, render):
     s = env.reset()
     a = agent.start(s)
     done = False
-
     step = 0
 
     while not done:
@@ -46,17 +45,12 @@ def runExperiment(env, num_episodes, agent, render):
 
       (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
       agent.update(s, sp, r, a, done)
-      # if a == 0:
-      #     print(s)
-      #     print(sp)
-      # print("")
-      s = sp # update the current state to sp
-      a = agent.getAction(s) # update the current action to a
+      s = sp
+      a = agent.getAction(s)
       # print("State action pair", s, a)
       # print(step)
       total_reward += r
       rewards.append(total_reward) # uncomment
-
       step += 1
 
     steps.append(step)
@@ -133,7 +127,6 @@ if args.render:
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
 
-    # np.save("tmp/BayesianQ_mean_rewards", rewards)
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
