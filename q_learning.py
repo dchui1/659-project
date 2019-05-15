@@ -75,9 +75,18 @@ def averageOverRuns(Agent, Env, exp):
         #print("Completed a run")
         total_steps.append(steps)
         # print("Completed run %d of %d"%(, exp.runs)
-    metric = np.array(total_steps)
-    mean = metric.mean(axis=0)
-    stderr = metric.std(axis=0) / np.sqrt(exp.runs)
+
+    rew_array = np.array(rewards)
+    total_reward_list = []
+    for run in range(exp.runs):
+        total_reward_list.append(rew_array[run, -1])
+
+    # metric = np.array(total_steps[0])
+    # mean = metric.mean(axis=0)
+    # stderr = metric.std(axis=0) / np.sqrt(exp.runs)
+    mean = np.mean(total_reward_list)
+    stderr = np.std(total_reward_list) / np.sqrt(exp.runs)
+    print("here is the mean over all runs = ", mean)
     return (mean, stderr)
 
 
