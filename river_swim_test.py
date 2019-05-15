@@ -55,6 +55,7 @@ def check_move_right():
                 count += 1
         else:
             if new_pos == initial_pos:
+                assert(r == reward_at_final_state)
                 count += 1
         initial_pos = env.pos
 
