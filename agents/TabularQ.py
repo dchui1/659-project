@@ -41,7 +41,7 @@ class TabularQ(Agent):
     # if gamma_tp1 = 0, that means the episode terminated
     def learn(self, s, sp, r, a, gamma):
         # ap = self.maxAction(sp) # for regular Q-learning
-        ap = self.policy(sp) # for SARSA
+        ap = self.next_action # for SARSA
         Q_p = self.Q[self.getIndex(sp), ap]
         s_idx = self.getIndex(s)
 

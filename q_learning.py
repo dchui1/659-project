@@ -87,6 +87,7 @@ def averageOverRuns(Agent, Env, exp):
     mean = np.mean(total_reward_list)
     stderr = np.std(total_reward_list) / np.sqrt(exp.runs)
     print("here is the mean over all runs = ", mean)
+    print("standard error = ", stderr)
     return (mean, stderr)
 
 
