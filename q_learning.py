@@ -36,7 +36,6 @@ def runExperiment(env, num_episodes, agent, render):
     s = env.reset()
     a = agent.start(s)
     done = False
-
     step = 0
 
     while not done:
@@ -46,18 +45,16 @@ def runExperiment(env, num_episodes, agent, render):
 
       (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
       agent.update(s, sp, r, a, done)
-
-      s = sp # update the current state to sp
-      a = agent.getAction(s) # update the current action to a
+      s = sp
+      a = agent.getAction(s)
       # print("State action pair", s, a)
       # print(step)
       total_reward += r
-      rewards.append(total_reward)
-
+      rewards.append(total_reward) # uncomment
       step += 1
 
     steps.append(step)
-    print("Episode", episode, " Step", step)
+    print("Episode", episode, " Total_Reward", total_reward)
     # agent.print()
 
   return (steps, rewards)
@@ -78,9 +75,19 @@ def averageOverRuns(Agent, Env, exp):
         #print("Completed a run")
         total_steps.append(steps)
         # print("Completed run %d of %d"%(, exp.runs)
-    metric = np.array(total_steps)
-    mean = metric.mean(axis=0)
-    stderr = metric.std(axis=0) / np.sqrt(exp.runs)
+
+    rew_array = np.array(rewards)
+    total_reward_list = []
+    for run in range(exp.runs):
+        total_reward_list.append(rew_array[run, -1])
+
+    # metric = np.array(total_steps[0])
+    # mean = metric.mean(axis=0)
+    # stderr = metric.std(axis=0) / np.sqrt(exp.runs)
+    mean = np.mean(total_reward_list)
+    stderr = np.std(total_reward_list) / np.sqrt(exp.runs)
+    print("here is the mean over all runs = ", mean)
+    print("standard error = ", stderr)
     return (mean, stderr)
 
 
@@ -130,7 +137,6 @@ if args.render:
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
 
-    # np.save("tmp/BayesianQ_mean_rewards", rewards)
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)

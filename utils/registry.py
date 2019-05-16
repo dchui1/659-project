@@ -12,6 +12,7 @@ from agents.UCLSAgent import UCLSAgent
 
 # environments
 from environments.gridworld import GridWorld
+from environments.riverswim import RiverSwim
 from environments.ContinuousGridworld import CtsGridWorld
 
 def getAgent(exp):
@@ -44,6 +45,8 @@ def getEnvironment(exp):
         return CtsGridWorld
     if exp.environment == 'gridworld':
         return GridWorld
+    if exp.environment == 'riverswim':
+        return RiverSwim
 
 
     raise NotImplementedError

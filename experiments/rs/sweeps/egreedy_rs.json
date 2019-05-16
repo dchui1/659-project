@@ -1,0 +1,14 @@
+{
+    "name": "tabular",
+    "agent": "tabular-q",
+    "environment": "riverswim",
+    "metaParameters": {
+        "alpha": [0.37, 0.2, 0.4, 0.8],
+        "epsilon": [0.12, 0.1, 0.15, 0.2],
+        "gamma": 0.95
+    },
+    "envParameters": {
+        "steps": 5000,
+        "episodes": 1
+    }
+}
