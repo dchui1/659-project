@@ -4,8 +4,8 @@ import argparse
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from utils.ExperimentDescription import ExperimentDescription
-import utils.registry as registry
+from src.ExperimentDescription import ExperimentDescription
+import src.registry as registry
 from pickle import dump
 
 def runExperiment(env, num_episodes, agent):

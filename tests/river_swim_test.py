@@ -2,21 +2,13 @@ import random
 import math
 import numpy as np
 
-from agents.TabularQ import TabularQ
-from agents.RiverswimOptimal import Optimal
-
-from environments.gridworld import GridWorld
-from environments.riverswim import RiverSwim
-from environments.ContinuousGridworld import CtsGridWorld
-
+from src.environments.riverswim import RiverSwim
 
 params = {
     "steps": 5000,
     "episodes": 1
     }
 env = RiverSwim(params)
-# agent = TabularQ(env.observationShape(), env.numActions(),
-#               params["meta_parameters"])
 reward_at_initial_state = 5.0
 reward_at_final_state = 10000.0
 reward_at_all_other_states = 0.0
