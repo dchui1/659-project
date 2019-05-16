@@ -1,8 +1,10 @@
-class Environment:
-    def step(self, action):
+from src.RLGlue.BaseEnvironment import BaseEnvironment
+
+class Environment(BaseEnvironment):
+    def start(self):
         raise NotImplementedError()
 
-    def reset(self):
+    def step(self, action):
         raise NotImplementedError()
 
     def observationShape(self):

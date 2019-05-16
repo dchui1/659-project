@@ -1,5 +1,6 @@
 from src.environments.Environment import Environment
 import numpy as np
+
 class CtsGridWorld(Environment):
     _x = 0
     _y = 0
@@ -19,6 +20,11 @@ class CtsGridWorld(Environment):
         self.viewer = None
         self._reset_render()
 
+    def start(self):
+        self._x = 0
+        self._y = 0
+        self.steps = 0
+        return np.array([self._x, self._y])
 
     def getReward(self):
         if self._x + self.stepSize >= 1 and self._y + self.stepSize >= 1:
@@ -42,16 +48,7 @@ class CtsGridWorld(Environment):
         self.steps += 1
         done = r == 1 or self.maxSteps == self.steps
 
-        return (np.array([self._x, self._y]), r, done, action)
-
-    def reset(self):
-        self.steps = 0
-        self._x = 0
-        self._y = 0
-
-        self._reset_render()
-
-        return np.array([0, 0])
+        return (r, np.array([self._x, self._y]), done)
 
     def observationShape(self):
         return [1, 1]
@@ -65,7 +62,7 @@ class CtsGridWorld(Environment):
 
     def render(self):
 
-        from environments import rendering
+        from src.environments import rendering
         if self.viewer is None:
             print("Create viewer")
             self.viewer = rendering.Viewer(700,700)

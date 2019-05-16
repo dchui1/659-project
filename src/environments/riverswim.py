@@ -18,10 +18,10 @@ class RiverSwim(Environment):
     self.SNswimRightStay = 0.3
 
 
-  def reset(self):
-      self.steps = 0
-      self.pos = 0
-      return [self.pos]
+  def start(self):
+    self.pos = 0
+    self.steps = 0
+    return np.array([0])
 
   def step(self, a): # the transition function?
     old_pos = self.pos
@@ -54,7 +54,7 @@ class RiverSwim(Environment):
     # tuple indicating (state, reward, terminated, action)
     # note this is a continuing task, so the environment will only
     # terminate when max number of steps is reached
-    return ([self.pos], self.rewardFunction(old_pos, a), done, a)
+    return (self.rewardFunction(old_pos, a), np.array([self.pos]), done)
 
   def rewardFunction(self, x, a):
     if x >= 5 and a == 1:

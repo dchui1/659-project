@@ -3,59 +3,59 @@ import math
 import argparse
 import os
 import numpy as np
-
-from src.ExperimentDescription import ExperimentDescription
-import src.registry as registry
 from pickle import dump
 import time
 from time import sleep
 
+from src.RLGlue.rl_glue import RlGlue
+from src.utils.AgentWrapper import AgentWrapper
+from src.ExperimentDescription import ExperimentDescription
+import src.registry as registry
 
-def runExperiment(env, num_episodes, agent, render):
+def runExperiment(glue, num_episodes, render):
+    rewards = []
+    steps = []
 
-  total_reward = 0
-  rewards = []
-  steps = []
+    for episode in range(num_episodes):
+        glue.start()
+        done = False
 
-  for episode in range(num_episodes):
-    s = env.reset()
-    a = agent.start(s)
-    done = False
-    step = 0
+        step = 0
+        while not done:
+            if render:
+                print("Render env")
+                glue.environment.render()
 
-    while not done:
-      if render:
-          print("Render env")
-          env.render()
+            (r, s, a, done) = glue.step()
 
-      (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
-      agent.update(s, sp, r, a, done)
-      s = sp
-      a = agent.getAction(s)
-      # print("State action pair", s, a)
-      # print(step)
-      total_reward += r
-      rewards.append(total_reward) # uncomment
-      step += 1
+            rewards.append(glue.total_reward)
+            step += 1
 
-    steps.append(step)
-    print("Episode", episode, " Total_Reward", total_reward)
-    # agent.print()
+        steps.append(step)
+        # print("Episode", episode, "steps", step)
+        # print("Episode", episode, "Total_Reward", glue.total_reward)
 
-  return (steps, rewards)
-
+    return (steps, rewards)
 
 def averageOverRuns(Agent, Env, exp):
     rewards = []
     total_steps = []
     for run in range(exp.runs):
-        env = Env(exp.env_params)
+        # set random seeds before each run
         np.random.seed(run)
         random.seed(run)
-        agent = Agent(env.observationShape(), env.numActions(),
-                      exp.meta_parameters)
-        (steps, r) = runExperiment(env, exp.env_params['episodes'], agent,
-                                   False)
+
+        # build the environment
+        env = Env(exp.env_params)
+
+        # build the agent and wrap it with an API compatibility layer
+        agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
+        agent_wrapper = AgentWrapper(agent)
+
+        # build the rl-glue instance to handle the agent-environment interface
+        glue = RlGlue(agent_wrapper, env)
+
+        (steps, r) = runExperiment(glue, exp.env_params['episodes'], False)
         rewards.append(r)
         #print("Completed a run")
         total_steps.append(steps)
@@ -66,35 +66,18 @@ def averageOverRuns(Agent, Env, exp):
     for run in range(exp.runs):
         total_reward_list.append(rew_array[run, -1])
 
-    # metric = np.array(total_steps[0])
-    # mean = metric.mean(axis=0)
-    # stderr = metric.std(axis=0) / np.sqrt(exp.runs)
     mean = np.mean(total_reward_list)
     stderr = np.std(total_reward_list) / np.sqrt(exp.runs)
     print("here is the mean over all runs = ", mean)
     print("standard error = ", stderr)
     return (mean, stderr)
 
-
-def confidenceInterval(mean, stderr):
-    return (mean - stderr, mean + stderr)
-
-
-def plotRewards(ax, rewards, stderr, label):
-    (low_ci, high_ci) = confidenceInterval(rewards, stderr)
-    ax.plot(rewards, label=label)
-    ax.fill_between(range(rewards.shape[0]), low_ci, high_ci, alpha=0.4)
-
-
 def parse_args():
     parser = argparse.ArgumentParser("Bayesian exploration testbed")
-    parser.add_argument(
-        "-i", type=int, help="integer choosing parameter permutation to run")
-    parser.add_argument(
-        "-e", type=str, help="path to experiment description json file")
+    parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
+    parser.add_argument("-e", type=str, help="path to experiment description json file")
     parser.add_argument("-r", type=int, help="number of runs to complete")
-    parser.add_argument(
-        "-b", type=str, default='results', help="base path for saving results")
+    parser.add_argument("-b", type=str, default='results', help="base path for saving results")
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
     if args.b == None or args.r == None or args.i == None:
@@ -103,22 +86,17 @@ def parse_args():
         exit(1)
     return args
 
-
 args = parse_args()
 exp = ExperimentDescription(args.e, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
-# In case the render command causes issues, get ride of the lines in between dash lines, and add the following:
-# (rewards, stderr) = averageOverRuns(Agent, Env, exp)
-# np.save("tmp/BayesianQ_mean_rewards", rewards)
-
-# If the render command causes issues, get rid of the following lines: ---------
 if args.render:
-    print("Render mode")
-    env = Env(exp.env_params)
-    agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-    runExperiment(env, exp.env_params['episodes'], agent, args.render)
+    pass
+    # print("Render mode")
+    # env = Env(exp.env_params)
+    # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
+    # runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp)
 

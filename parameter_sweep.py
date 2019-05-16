@@ -3,37 +3,33 @@ import math
 import argparse
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-from src.ExperimentDescription import ExperimentDescription
-import src.registry as registry
 from pickle import dump
 
-def runExperiment(env, num_episodes, agent):
-  total_reward = 0
-  rewards = []
-  steps = []
+from src.RLGlue.rl_glue import RlGlue
+from src.utils.AgentWrapper import AgentWrapper
+from src.ExperimentDescription import ExperimentDescription
+import src.registry as registry
 
-  for episode in range(num_episodes):
-    s = env.reset()
-    a = agent.start(s)
-    done = False
+def runExperiment(glue, num_episodes):
+    rewards = []
+    steps = []
 
-    step = 0
+    for episode in range(num_episodes):
+        glue.start()
+        done = False
 
-    while not done:
-      (sp, r, done, __) = env.step(a) # Note: the environment "registers" the new sp as env.pos
-      agent.update(s, sp, r, a, done)
+        step = 0
+        while not done:
+            (r, s, a, done) = glue.step()
 
-      s = sp # update the current state to sp
-      a = agent.getAction(s) # update the current action to a
-      total_reward += r
-      rewards.append(total_reward)
+            rewards.append(glue.total_reward)
+            step += 1
 
-      step += 1
+        steps.append(step)
+        # print("Episode", episode, "steps", step)
+        # print("Episode", episode, "Total_Reward", glue.total_reward)
 
-    steps.append(step)
-
-  return (steps, rewards)
+    return (steps, rewards)
 
 def parse_args():
   parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")
@@ -55,11 +51,21 @@ exp = ExperimentDescription(args.e, args.i)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
-env = Env(exp.env_params)
+# set random seeds before each run
 np.random.seed(exp.run)
 random.seed(exp.run)
+
+# build the environment
+env = Env(exp.env_params)
+
+# build the agent and wrap it with an API compatibility layer
 agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-(steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
+agent_wrapper = AgentWrapper(agent)
+
+# build the rl-glue instance to handle the agent-environment interface
+glue = RlGlue(agent_wrapper, env)
+
+(steps, r) = runExperiment(glue, exp.env_params['episodes'])
 
 # save some metric for performance to file
 meanResult = np.mean(steps)

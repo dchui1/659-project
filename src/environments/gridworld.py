@@ -22,6 +22,12 @@ class GridWorld(Environment):
             return 1.0
         return 0
 
+    def start(self):
+        self._x = 0
+        self._y = 0
+        self.steps = 0
+        return np.array([self._x, self._y])
+
     def step(self, action):
         if action == 0:
             self._x = bound(self._x + 1, 0, self.shape[0] - 1)
@@ -37,14 +43,7 @@ class GridWorld(Environment):
         done = r == 1 or self.maxSteps == self.steps
 
 
-        return (np.array([self._x, self._y]), r, done, action)
-
-    def reset(self):
-        self.steps = 0
-        self._x = 0
-        self._y = 0
-
-        return np.array([0, 0])
+        return (r, np.array([self._x, self._y]), done)
 
     def observationShape(self):
         # cast to list just in case we received a tuple or a np.array
