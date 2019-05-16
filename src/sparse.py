@@ -1,5 +1,5 @@
 import lib.python.sparse as sparse
-from src.representations.TileCoding import TileCoding
+from PyFixedReps.TileCoder import TileCoder
 import numpy as np
 
 # This is a sparse vector for doing very fast dot products and additions.
@@ -99,18 +99,15 @@ class SparseOneVector(object):
 
 class SparseTC(object):
     def __init__(self, args):
-        self.tilings = args['tilings']
-        self.tiles = args['tiles']
-        self.dims = args['dims']
-        self.actions = args['actions']
+        self.tc = TileCoder(args)
 
-        self.tc = TileCoding(self.dims, self.tilings, self.tiles, self.actions)
+        self._features = self.tc.features()
 
     def features(self):
-        return int(self.tiles**self.dims * self.tilings * self.actions)
+        return self._features
 
     def representation(self, s, a):
-        idx = self.tc.get_index(s, a)
-        vec = SparseOneVector(list(idx), self.features())
+        idx = self.tc.get_indices(s, a)
+        vec = SparseOneVector(list(idx), self._features)
         return vec
 
