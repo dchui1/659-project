@@ -21,14 +21,14 @@ class TabularQ(Agent):
         if np.random.random() < self.epsilon:
             return np.random.randint(0, self.num_acts)
         return self.maxAction(s)
-    
+
     def maxAction(self, s):
         act_vals = self.Q[self.getIndex(s), :]
         move = argMax(act_vals)
         return move
 
     def learn(self, s, sp, r, a, gamma):
-        ap = self.maxAction(sp) # for regular Q-learning
+        ap = self.maxAction(sp)
         Q_p = self.Q[self.getIndex(sp), ap]
         s_idx = self.getIndex(s)
 

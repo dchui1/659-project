@@ -10,10 +10,8 @@ class UCB(TabularQ):
         self.N = np.zeros((np.prod(state_shape), num_acts))
         self.steps = 0
 
-
     def update(self, s, sp, r, a, done):
         s_idx = self.getIndex(s)
-        sp_idx = self.getIndex(sp)
 
         self.steps += 1
         self.N[s_idx, a] += 1

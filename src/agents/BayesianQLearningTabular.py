@@ -2,6 +2,7 @@ import numpy as np
 from src.agents.TabularQ import TabularQ
 from src.bayesian_inference.TabularQApproximation import TabularQApproximation
 from src.utils.math import argMax
+
 class BayesianQLearningTabular(TabularQ):
     def __init__(self, state_shape, num_acts, params):
         super().__init__(state_shape, num_acts, params)

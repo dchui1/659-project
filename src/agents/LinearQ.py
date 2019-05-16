@@ -26,26 +26,12 @@ class LinearQ(Agent):
         self.size = self.tc.features()
 
         self.w = np.zeros((self.size))
-        self.next_action = 0
-
-    def policy(self, S):
-        if np.random.random() < self.epsilon:
-            return np.random.randint(0, self.num_acts)
-        return self.maxAction(S)
 
     def maxAction(self, s):
         act_vals = [self.tc.representation(s, a).dot(self.w) for a in range(self.num_acts)]
         move = argMax(act_vals)
         return move
 
-    def getAction(self, Obs):
-        return self.next_action
-
-    def start(self, obs):
-        self.next_action = self.policy(obs)
-        return self.next_action
-
-    # if gamma_tp1 = 0, that means the episode terminated
     def learn(self, s, sp, r, a, gamma):
         ap = self.maxAction(sp)
 
@@ -53,14 +39,13 @@ class LinearQ(Agent):
 
         x = self.tc.representation(s, a)
         Q = x.dot(self.w)
-        tde = (r + gamma * Q_p) - Q  # add a max_bonus i
+        tde = (r + gamma * Q_p) - Q
         self.w = self.w + self.alpha*tde*x
 
     def update(self, S, Sp, r, a, done):
         if done:
             self.learn(S, Sp, r, a, 0)
         else:
-            self.next_action = self.policy(Sp)
             self.learn(S, Sp, r, a, self.gamma)
 
     def print(self):

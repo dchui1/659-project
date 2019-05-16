@@ -7,9 +7,6 @@ class BnnRTabularQ(TabularQ):
         super().__init__(state_shape, num_acts, params)
         self.dimensions = state_shape
         self.num_actions = num_acts
-        log_divergence_weight = params['log_divergence_weight']
-        prior_stddev = params['prior_stddev']
-        blr_alpha = params['blr_alpha']
         self.rewardApprox = BNNApproximation(state_shape, num_acts)
         self.rewardSamples = 100
         self.epochs = params['epochs']
@@ -34,8 +31,6 @@ class BnnRTabularQ(TabularQ):
         y = s[1]
         input[x][y][a] = 1
         return input
-
-
 
     def convert_state(self, s):
         sparse_vectors = []

@@ -40,10 +40,8 @@ class RiverSwim(Environment):
           self.pos = self.pos - 1
         elif flip > self.swimRightDown + self.swimRightStay:
           self.pos = self.pos + 1
-
-    # Do we need the following lines for the elif statement?
     elif a == 0: # make sure we always more to the left if we take action 0
-        self.pos = np.clip(self.pos - 1, 0, 5)
+      self.pos = self.pos - 1
 
     # make sure that the position we return (the next state) is between 0 and 5
     self.pos = np.clip(self.pos, 0, 5)
