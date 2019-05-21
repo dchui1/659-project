@@ -9,6 +9,7 @@ from time import sleep
 
 from src.RLGlue.rl_glue import RlGlue
 from src.utils.AgentWrapper import AgentWrapper
+from src.utils.Bonus_Generator import BayesianBonusGenerator
 from src.ExperimentDescription import ExperimentDescription
 import src.registry as registry
 
@@ -50,7 +51,7 @@ def averageOverRuns(Agent, Env, exp):
 
         # build the agent and wrap it with an API compatibility layer
         agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-        agent_wrapper = AgentWrapper(agent)
+        agent_wrapper = BayesianBonusGenerator(agent, exp.meta_parameters["Bonus"])
 
         # build the rl-glue instance to handle the agent-environment interface
         glue = RlGlue(agent_wrapper, env)

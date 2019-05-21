@@ -5,6 +5,10 @@ from src.agents.TabularRTabularQ import TabularRTabularQ
 # from src.agents.BnnRTabularQ import BnnRTabularQ
 from src.agents.BayesianQLearningTabular import BayesianQLearningTabular
 
+from src.agents.Dual_Vf import Dual_Vf
+
+from src.agents.Mixing_Agent import Mixing_Agent
+
 from src.agents.RiverswimOptimal import Optimal
 from src.agents.UCB import UCB
 # from src.agents.LinearQ_TDistR import TDistRLinearQ
@@ -37,6 +41,12 @@ def getAgent(exp):
 
     if exp.agent == 'ucls tabular-q':
         return UCLSAgent
+
+    if exp.agent == 'dual_vf':
+        return Dual_Vf
+
+    if exp.agent == 'mixing_agent':
+        return Mixing_Agent
 
     raise NotImplementedError
 
