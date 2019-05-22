@@ -6,6 +6,7 @@ import numpy as np
 from pickle import dump
 import time
 from time import sleep
+import scipy
 
 from src.RLGlue.rl_glue import RlGlue
 from src.utils.AgentWrapper import AgentWrapper
@@ -38,7 +39,7 @@ def runExperiment(glue, num_episodes, render):
     return (steps, rewards)
 
 def averageOverRuns(Agent, Env, exp):
-    rewards = []
+    rewards_list = []
     total_steps = []
     for run in range(exp.runs):
         # set random seeds before each run
@@ -56,21 +57,28 @@ def averageOverRuns(Agent, Env, exp):
         glue = RlGlue(agent_wrapper, env)
 
         (steps, r) = runExperiment(glue, exp.env_params['episodes'], False)
-        rewards.append(r)
+        rewards_list.append(r[-1])
         #print("Completed a run")
         total_steps.append(steps)
         # print("Completed run %d of %d"%(, exp.runs)
-
-    rew_array = np.array(rewards)
-    total_reward_list = []
-    for run in range(exp.runs):
-        total_reward_list.append(rew_array[run, -1])
-
-    mean = np.mean(total_reward_list)
-    stderr = np.std(total_reward_list) / np.sqrt(exp.runs)
+    assert len(rewards_list) == exp.runs
+    rew_array = np.array(rewards_list)
+    print(rew_array)
+    mean = np.mean(rew_array)
+    std_dev = np.std(rew_array)
+    stderr = scipy.stats.sem(rew_array)
     print("here is the mean over all runs = ", mean)
-    print("standard error = ", stderr)
-    return (mean, stderr)
+    print("standard dev = ", std_dev)
+    print("standard err = ", stderr)
+    ci = mean_confidence_interval(rew_array, stderr)
+    return (mean, std_dev, stderr, ci, rew_array)
+
+
+def mean_confidence_interval(data_array, se, confidence=0.95):
+    n = len(data_array)
+    h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
+    return h
+
 
 def parse_args():
     parser = argparse.ArgumentParser("Bayesian exploration testbed")
@@ -98,7 +106,7 @@ if args.render:
     # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
     # runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
-    (rewards, stderr) = averageOverRuns(Agent, Env, exp)
+    (rewards, std_dev, stderr, ci, rew_array) = averageOverRuns(Agent, Env, exp)
 
 
 # save some metric for performance to file
