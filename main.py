@@ -5,6 +5,7 @@ import os
 import numpy as np
 from pickle import dump
 import time
+import json
 from time import sleep
 import scipy
 
@@ -52,8 +53,7 @@ def averageOverRuns(Agent, Env, exp):
 
         # build the agent and wrap it with an API compatibility layer
         agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-        agent_wrapper = BayesianBonusGenerator(agent, exp.meta_parameters["Bonus"])
-
+        agent_wrapper = BayesianBonusGenerator(agent, bonus_params)
         # build the rl-glue instance to handle the agent-environment interface
         glue = RlGlue(agent_wrapper, env)
 
@@ -84,19 +84,24 @@ def mean_confidence_interval(data_array, se, confidence=0.95):
 def parse_args():
     parser = argparse.ArgumentParser("Bayesian exploration testbed")
     parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
-    parser.add_argument("-e", type=str, help="path to experiment description json file")
+    parser.add_argument("-a", type=str, help="path to agent description json file")
+    parser.add_argument("-b", type=str, help="path to bonus description json file")
     parser.add_argument("-r", type=int, help="number of runs to complete")
-    parser.add_argument("-b", type=str, default='results', help="base path for saving results")
+    parser.add_argument("-p", type=str, default='results', help="base path for saving results")
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
-    if args.b == None or args.r == None or args.i == None:
+    if args.p == None or args.r == None or args.i == None:
         print('Please run again using (without angle braces):')
         print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
         exit(1)
     return args
 
 args = parse_args()
-exp = ExperimentDescription(args.e, args.i, args.r)
+bonus_path = args.b
+with open(bonus_path) as f:
+    bonus_params = json.load(f)
+
+exp = ExperimentDescription(args.a, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 

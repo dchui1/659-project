@@ -1,0 +1,15 @@
+{
+    "name": "tabular",
+    "agent": "mixing_agent",
+    "environment": "riverswim",
+    "metaParameters": {
+        "epsilon": [0.12, 0.05, 0.1, 0.2],
+        "alpha" : 0.1,
+        "gamma" : 0.95,
+        "c":[0.0, 0.5, 1.0]
+    },
+    "envParameters": {
+        "steps": 5000,
+        "episodes": 1
+    }
+}
