@@ -5,6 +5,7 @@ import os
 import numpy as np
 from pickle import dump
 import time
+import json
 from time import sleep
 
 from src.RLGlue.rl_glue import RlGlue
@@ -38,7 +39,7 @@ def runExperiment(glue, num_episodes, render):
 
     return (steps, rewards)
 
-def averageOverRuns(Agent, Env, exp):
+def averageOverRuns(Agent, Env, exp, bonus_params):
     rewards = []
     total_steps = []
     for run in range(exp.runs):
@@ -51,13 +52,13 @@ def averageOverRuns(Agent, Env, exp):
 
         # build the agent and wrap it with an API compatibility layer
         agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-        agent_wrapper = BayesianBonusGenerator(agent, exp.meta_parameters["Bonus"])
-
+        agent_wrapper = BayesianBonusGenerator(agent, bonus_params)
         # build the rl-glue instance to handle the agent-environment interface
         glue = RlGlue(agent_wrapper, env)
 
         (steps, r) = runExperiment(glue, exp.env_params['episodes'], False)
         rewards.append(r)
+        agent.print()
         #print("Completed a run")
         total_steps.append(steps)
         # print("Completed run %d of %d"%(, exp.runs)
@@ -76,19 +77,24 @@ def averageOverRuns(Agent, Env, exp):
 def parse_args():
     parser = argparse.ArgumentParser("Bayesian exploration testbed")
     parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
-    parser.add_argument("-e", type=str, help="path to experiment description json file")
+    parser.add_argument("-a", type=str, help="path to agent description json file")
+    parser.add_argument("-b", type=str, help="path to bonus description json file")
     parser.add_argument("-r", type=int, help="number of runs to complete")
-    parser.add_argument("-b", type=str, default='results', help="base path for saving results")
+    parser.add_argument("-p", type=str, default='results', help="base path for saving results")
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
-    if args.b == None or args.r == None or args.i == None:
+    if args.p == None or args.r == None or args.i == None:
         print('Please run again using (without angle braces):')
         print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
         exit(1)
     return args
 
 args = parse_args()
-exp = ExperimentDescription(args.e, args.i, args.r)
+bonus_path = args.b
+with open(bonus_path) as f:
+    bonus_params = json.load(f)
+
+exp = ExperimentDescription(args.a, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
@@ -99,7 +105,7 @@ if args.render:
     # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
     # runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
-    (rewards, stderr) = averageOverRuns(Agent, Env, exp)
+    (rewards, stderr) = averageOverRuns(Agent, Env, exp, bonus_params)
 
 
 # save some metric for performance to file

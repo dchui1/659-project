@@ -19,9 +19,10 @@ class RiverSwim(Environment):
 
 
   def start(self):
-    self.pos = 0
+    self.pos = np.random.choice([1, 2])
     self.steps = 0
-    return np.array([0])
+    print(self.pos)
+    return np.array([self.pos])
 
   def step(self, a): # the transition function?
     old_pos = self.pos

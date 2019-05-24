@@ -63,7 +63,6 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.w = params["w"]
         self.b_max = -float("inf")
         self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0, self.b_max]
-
         # To update beta, we need to keep track of the following 3 values for each (s,a)
         self.empirical_mean = np.zeros((num_states * num_acts))
         self.n = np.zeros(
@@ -90,15 +89,19 @@ class TabularBayesianApproximation(BayesianApproximator):
 
     def sample(self, x, use_stddev=False):
         mu, nu, alpha, beta, b_max = self.B[x, :]
-        scale = max(0, beta * (nu + 1) / (alpha * nu)) # Make sure that the scale is >= 0
+        scale = max(1e-7, beta * (nu + 1) / (alpha * nu)) # Make sure that the scale is >= 0
+        print("beta = ", beta)
+        print("nu = ", nu)
+        print("alpha = ", alpha)
         df = 2 * alpha
         try:
             r = t.ppf(q=self.q, df=df, loc=mu, scale=scale)
+            print(self.q, df, mu, scale)
         except:
             print(scale)
             exit()
         b = self.w * (r - mu)
-        # print(b)
+        print(b)
         self.bonus = b
         return self.bonus
 
