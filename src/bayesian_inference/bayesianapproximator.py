@@ -43,8 +43,7 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.empirical_mean[x] += (val - self.empirical_mean[x]) / self.n[x]
         self.local_sum_sq[x] += np.square(val)
 
-        self.B[x, 0] = (self.nu_0 * self.mu_0 + self.n[x] *
-                        self.empirical_mean[x]) / (self.nu_0 + self.n[x])
+        self.B[x, 0] = (self.nu_0 * self.mu_0 + self.n[x] * self.empirical_mean[x]) / (self.nu_0 + self.n[x])
         self.B[x, 1] = self.nu_0 + self.n[x]
         self.B[x, 2] = self.alpha_0 + self.n[x] / 2
 
@@ -53,12 +52,6 @@ class TabularBayesianApproximation(BayesianApproximator):
         prior_residual_multiplier = ((self.n[x] * self.nu_0) / (self.n[x] + self.nu_0))
         prior_residual_sq = 0.5 * np.square(self.empirical_mean[x] - self.mu_0)
         self.B[x, 3] = self.beta_0 + 0.5 * sum_sq_residuals + prior_residual_multiplier * prior_residual_sq
-
-        # self.B[x, 3] = ((self.beta_0 + 0.5
-        #     * (self.local_sum_sq[x] - self.n[x] * np.square(self.empirical_mean[x])))
-        #     + 0.5 * (self.local_sum_sq[x] -2 * self.n[x] * self.local_sum_sq[x] + np.square(self.empirical_mean[x]))
-        #     + (self.n[x] * self.nu_0) / (self.nu_0 + self.n[x])
-        #     * 0.5 * np.square(self.empirical_mean[x] - self.mu_0))
 
     def sample(self, x, use_stddev=False):
         mu, nu, alpha, beta = self.B[x, :]

@@ -1,13 +1,9 @@
 import random
-import math
 import argparse
 import os
 import numpy as np
 from pickle import dump
-import time
 import json
-from time import sleep
-import scipy
 
 from src.RLGlue.rl_glue import RlGlue
 from src.ExperimentDescription import ExperimentDescription
@@ -57,27 +53,21 @@ def averageOverRuns(Agent, Env, exp):
         glue = RlGlue(agent_wrapper, env)
 
         (steps, r) = runExperiment(glue, exp.env_params['episodes'], False)
-        rewards_list.append(r[-1])
+        rewards_list.append(r)
         #print("Completed a run")
         total_steps.append(steps)
         # print("Completed run %d of %d"%(, exp.runs)
-    assert len(rewards_list) == exp.runs
-    rew_array = np.array(rewards_list)
-    print(rew_array)
-    mean = np.mean(rew_array)
-    std_dev = np.std(rew_array)
-    stderr = scipy.stats.sem(rew_array)
+
+    # take mean / std over runs
+    mean = np.mean(rewards_list, axis=0)
+    std_dev = np.std(rewards_list, axis=0, ddof=1)
+    stderr = std_dev / np.sqrt(exp.runs)
+
     print("here is the mean over all runs = ", mean)
     print("standard dev = ", std_dev)
     print("standard err = ", stderr)
-    ci = mean_confidence_interval(rew_array, stderr)
-    return (mean, std_dev, stderr, ci, rew_array)
 
-
-def mean_confidence_interval(data_array, se, confidence=0.95):
-    n = len(data_array)
-    h = se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
-    return h
+    return (mean, stderr)
 
 
 def parse_args():
@@ -114,15 +104,15 @@ if args.render:
     # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
     # runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
-    (rewards, std_dev, stderr, ci, rew_array) = averageOverRuns(Agent, Env, exp)
+    (mean, stderr) = averageOverRuns(Agent, Env, exp)
 
 
 # save some metric for performance to file
-meanResult = np.mean(rewards)
+meanResult = np.mean(mean)
 path = f'{args.p}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
 os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
     f.write(str(meanResult))
 
 with open(f'{path}/results.pkl', 'wb') as f:
-    dump({"results": (rewards, stderr)}, f)
+    dump({"results": (mean, stderr)}, f)
