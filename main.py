@@ -5,11 +5,11 @@ import os
 import numpy as np
 from pickle import dump
 import time
+import json
 from time import sleep
 import scipy
 
 from src.RLGlue.rl_glue import RlGlue
-from src.utils.AgentWrapper import AgentWrapper
 from src.ExperimentDescription import ExperimentDescription
 import src.registry as registry
 
@@ -51,8 +51,8 @@ def averageOverRuns(Agent, Env, exp):
 
         # build the agent and wrap it with an API compatibility layer
         agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-        agent_wrapper = AgentWrapper(agent)
-
+        AgentWrapper = registry.getAgentWrapper(bonus_params["name"])
+        agent_wrapper = AgentWrapper(agent, bonus_params)
         # build the rl-glue instance to handle the agent-environment interface
         glue = RlGlue(agent_wrapper, env)
 
@@ -83,19 +83,27 @@ def mean_confidence_interval(data_array, se, confidence=0.95):
 def parse_args():
     parser = argparse.ArgumentParser("Bayesian exploration testbed")
     parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
-    parser.add_argument("-e", type=str, help="path to experiment description json file")
+    parser.add_argument("-a", type=str, help="path to agent description json file")
+    parser.add_argument("-b", type=str, help="path to bonus description json file")
     parser.add_argument("-r", type=int, help="number of runs to complete")
-    parser.add_argument("-b", type=str, default='results', help="base path for saving results")
+    parser.add_argument("-p", type=str, default='results', help="base path for saving results")
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
-    if args.b == None or args.r == None or args.i == None:
+    if args.p == None or args.r == None or args.i == None:
         print('Please run again using (without angle braces):')
         print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
         exit(1)
     return args
 
 args = parse_args()
-exp = ExperimentDescription(args.e, args.i, args.r)
+bonus_path = args.b
+if bonus_path is not None:
+    with open(bonus_path) as f:
+        bonus_params = json.load(f)
+else:
+    bonus_params = {"name": "default"}
+
+exp = ExperimentDescription(args.a, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
@@ -111,7 +119,7 @@ else:
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
-path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
+path = f'{args.p}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
 os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
     f.write(str(meanResult))

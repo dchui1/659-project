@@ -4,12 +4,15 @@ from src.agents.TabularQ import TabularQ
 from src.agents.TabularRTabularQ import TabularRTabularQ
 # from src.agents.BnnRTabularQ import BnnRTabularQ
 from src.agents.BayesianQLearningTabular import BayesianQLearningTabular
-
+from src.agents.Dual_Vf import Dual_Vf
+from src.agents.Mixing_Agent import Mixing_Agent
 from src.agents.RiverswimOptimal import Optimal
 from src.agents.UCB import UCB
 # from src.agents.LinearQ_TDistR import TDistRLinearQ
 from src.agents.UCLSAgent import UCLSAgent
 
+from src.utils.Bonus_Generator import BayesianBonusGenerator
+from src.utils.AgentWrapper import AgentWrapper
 # environments
 from src.environments.gridworld import GridWorld
 from src.environments.riverswim import RiverSwim
@@ -38,6 +41,12 @@ def getAgent(exp):
     if exp.agent == 'ucls tabular-q':
         return UCLSAgent
 
+    if exp.agent == 'dual_vf':
+        return Dual_Vf
+
+    if exp.agent == 'mixing_agent':
+        return Mixing_Agent
+
     raise NotImplementedError
 
 def getEnvironment(exp):
@@ -48,5 +57,9 @@ def getEnvironment(exp):
     if exp.environment == 'riverswim':
         return RiverSwim
 
-
     raise NotImplementedError
+
+def getAgentWrapper(name):
+    if name == 'bayesian':
+        return BayesianBonusGenerator
+    return AgentWrapper
