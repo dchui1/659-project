@@ -23,6 +23,8 @@ class Dual_Vf(Agent):
             return np.random.randint(0, self.num_acts)
 
         act_vals = self.params["c"]*self.TabR.Q[self.getIndex(s), :] + (1 - self.params["c"])*self.TabB.Q[self.getIndex(s), :]
-        print(act_vals)
         move = argMax(act_vals)
         return move
+
+    def print(self):
+        self.TabR.print()

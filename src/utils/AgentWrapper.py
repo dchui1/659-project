@@ -4,7 +4,7 @@ from src.RLGlue.BaseAgent import BaseAgent
 # keeps track of the previous (state, action) pair
 # and passes that to the agent update function
 class AgentWrapper(BaseAgent):
-    def __init__(self, base_agent):
+    def __init__(self, base_agent, params):
         self.agent = base_agent
 
         self.s_t = None
