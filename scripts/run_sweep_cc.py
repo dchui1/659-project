@@ -1,6 +1,6 @@
 import argparse
 import os
-from utils.ExperimentDescription import ExperimentDescription
+from src.ExperimentDescription import ExperimentDescription
 
 tasks_per_cpu = 8
 cpus = 8
@@ -25,9 +25,10 @@ sbatch_args = ' '.join([
 
 def parse_args():
   parser = argparse.ArgumentParser("Reinforcement Learning experiments for multiagent environments")
-  parser.add_argument("-e", type=str, help="path to experiment description json file")
+  parser.add_argument("-a", type=str, help="path to experiment description json file")
+  parser.add_argument("-b", type=str, help="path to the bonus description json file")
   parser.add_argument("-r", type=int, help="number of runs to complete")
-  parser.add_argument("-b", type=str, default='results', help="base path for saving results")
+  parser.add_argument("-p", type=str, default='results', help="base path for saving results")
 
   args = parser.parse_args()
   if args.b == None or args.r == None:
@@ -54,7 +55,7 @@ num = exp.num_permutations * args.r
 
 for jobs in bundle(range(0, num - 1), tasks_per_cpu * cpus):
     runs = ' '.join(map(str, jobs))
-    parallel = f'parallel -j{cpus} --delay 1 srun -N1 -n1 python parameter_sweep.py -e {args.e} -b {args.b} -i ::: {runs}'
+    parallel = f'parallel -j{cpus} --delay 1 srun -N1 -n1 python -m src.main -a {args.a} -b {args.b} -p {args.p} -i ::: {runs}'
 
     slurm_file = f'''#!/bin/bash
 cd {cwd}
