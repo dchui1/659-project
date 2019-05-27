@@ -10,8 +10,6 @@ from time import sleep
 import scipy
 
 from src.RLGlue.rl_glue import RlGlue
-from src.utils.AgentWrapper import AgentWrapper
-from src.utils.Bonus_Generator import BayesianBonusGenerator
 from src.ExperimentDescription import ExperimentDescription
 import src.registry as registry
 
@@ -53,7 +51,8 @@ def averageOverRuns(Agent, Env, exp):
 
         # build the agent and wrap it with an API compatibility layer
         agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-        agent_wrapper = BayesianBonusGenerator(agent, bonus_params)
+        AgentWrapper = registry.getAgentWrapper(bonus_params["name"])
+        agent_wrapper = AgentWrapper(agent, bonus_params)
         # build the rl-glue instance to handle the agent-environment interface
         glue = RlGlue(agent_wrapper, env)
 
@@ -98,8 +97,11 @@ def parse_args():
 
 args = parse_args()
 bonus_path = args.b
-with open(bonus_path) as f:
-    bonus_params = json.load(f)
+if bonus_path is not None:
+    with open(bonus_path) as f:
+        bonus_params = json.load(f)
+else:
+    bonus_params = {"name": "default"}
 
 exp = ExperimentDescription(args.a, args.i, args.r)
 Env = registry.getEnvironment(exp)
@@ -117,7 +119,7 @@ else:
 
 # save some metric for performance to file
 meanResult = np.mean(rewards)
-path = f'{args.b}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
+path = f'{args.p}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
 os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
     f.write(str(meanResult))
