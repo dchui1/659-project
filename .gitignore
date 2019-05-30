@@ -14,3 +14,4 @@ figs/
 *.pkl
 plots/
 plots.zip
+src/sparse/build
