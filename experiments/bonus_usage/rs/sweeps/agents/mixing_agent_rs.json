@@ -4,9 +4,9 @@
     "environment": "riverswim",
     "metaParameters": {
         "epsilon": [0.12, 0.05, 0.1, 0.2],
-        "alpha" : 0.1,
+        "alpha" : 0.37,
         "gamma" : 0.95,
-        "c":[0.0, 0.5, 1.0]
+        "c": 1.0
     },
     "envParameters": {
         "steps": 5000,

@@ -12,21 +12,50 @@ from src.RLGlue.rl_glue import RlGlue
 from src.ExperimentDescription import ExperimentDescription
 import src.registry as registry
 
-def runExperiment(glue, num_episodes, render):
+
+def make_nested_list(num_states=6):
+    nested_list = []
+    list = []
+    for i in range(num_states):
+        nested_list.append(list)
+    return nested_list
+
+
+def runExperiment(glue, num_episodes, render, bonus_params, run):
     rewards = []
     steps = []
-
+    # ----- for debugging --------------------
+    num_states = glue.environment.observationShape()[0]
+    state_visits_all_episodes = np.zeros(num_states)
+    # s0 = np.zeros(glue.environment.STEPS_LIMIT+1)
+    if run == 1:
+        q_values_all_episodes = []
+        bonuses_all_episodes = []
+    # ----- end of debug block --------------------
     for episode in range(num_episodes):
         glue.start()
         done = False
-
         step = 0
         while not done:
             if render:
                 print("Render env")
                 glue.environment.render()
-
             (r, s, a, done) = glue.step()
+
+            # ---- for debugging -------------------
+            state_idx = s[0]
+            state_visits_all_episodes[state_idx] += 1
+            # if state_idx == 0:
+            #     s0[step] = 1.0
+            if run == 1:
+                if step % 100 == 0:
+                    q_values_all_episodes.append(np.copy(glue.agent.agent.Q))
+                    bonus_matrix = make_nested_list(num_states) # number of empty lists = number of states in total
+                    for s_i in range(num_states):
+                        bonus_array = glue.agent.compute_bonus_array([s_i])
+                        bonus_matrix[s_i] = bonus_array
+                    bonuses_all_episodes.append(bonus_matrix)
+            # ---- end of debug block ---------------
 
             rewards.append(glue.total_reward)
             step += 1
@@ -34,12 +63,20 @@ def runExperiment(glue, num_episodes, render):
         steps.append(step)
         # print("Episode", episode, "steps", step)
         # print("Episode", episode, "Total_Reward", glue.total_reward)
-
-    return (steps, rewards)
+    # ------ save data for debugging ---------------
+    if run == 1:
+        q_values_all_episodes = np.array(q_values_all_episodes)
+        bonuses_all_episodes = np.array(bonuses_all_episodes)
+        # np.save("tmp/rs/q_values_q{}".format(bonus_params["q"]), q_values_all_episodes)
+        # np.save("tmp/rs/b_values_q{}".format(bonus_params["q"]), bonuses_all_episodes)
+    # ---- end of debug block ---------------
+    state_visits_all_episodes = np.array(state_visits_all_episodes/np.sum(state_visits_all_episodes)) * 100
+    return (steps, rewards, state_visits_all_episodes)
 
 def averageOverRuns(Agent, Env, exp, bonus_params):
     rewards = []
     total_steps = []
+    sv_allruns = []
     for run in range(exp.runs):
         # set random seeds before each run
         np.random.seed(run)
@@ -55,12 +92,15 @@ def averageOverRuns(Agent, Env, exp, bonus_params):
         # build the rl-glue instance to handle the agent-environment interface
         glue = RlGlue(agent_wrapper, env)
 
-        (steps, r) = runExperiment(glue, exp.env_params['episodes'], False)
+        (steps, r, sv_run) = runExperiment(glue, exp.env_params['episodes'], False, bonus_params, run=run)
         rewards.append(r)
         agent.print()
-        #print("Completed a run")
+        print("completed run ", run)
         total_steps.append(steps)
+        sv_allruns.append(sv_run)
         # print("Completed run %d of %d"%(, exp.runs)
+    sv_allruns = np.array(sv_allruns)
+    # np.save("tmp/rs/s_visits_allruns_q{}".format(bonus_params["q"]), sv_allruns)
 
     rew_array = np.array(rewards)
     total_reward_list = []
@@ -99,15 +139,13 @@ else:
 exp = ExperimentDescription(args.a, args.i, args.r)
 Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
+print("quantile = ", bonus_params["q"])
 
 if args.render:
     pass
-    # print("Render mode")
-    # env = Env(exp.env_params)
-    # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-    # runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp, bonus_params)
+    np.save("tmp/rs/aver_epis_q{}_w{}".format(bonus_params["q"], bonus_params["w"]), np.array(rewards, stderr))
 
 
 # save some metric for performance to file
