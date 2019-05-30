@@ -33,7 +33,6 @@ def main():
 def aggregate_results(path):
 
     dirs = os.listdir(path)
-    print("Dirs length", len(dirs))
     all_steps = []
 
     for dir in dirs:
@@ -53,23 +52,6 @@ def aggregate_results(path):
 
 def averageOverRuns(runResults):
 
-  # rewards = []
-  # total_steps = []
-  # for run in runResults:
-  #   env = Env(exp.env_params)
-  #   np.random.seed(run)
-  #   random.seed(run)
-  #   agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-  #   (steps, r) = runExperiment(env, exp.env_params['episodes'], agent)
-  #   rewards.append(r)
-  #   print("Completed a run")
-  #   total_steps.append(steps)
-    # print("Completed run %d of %d"%(, exp.runs)
-  # print(len(runResults), "run results length")
-
-  # print(len(runResults[0]))
-  # print(len(runResults[50]))
-
   metric = np.array(runResults)
   # print("Metric shape", metric.shape)
   mean = metric.mean(axis=0)
@@ -77,7 +59,6 @@ def averageOverRuns(runResults):
   stderr = metric.std(axis=0) / np.sqrt(len(runResults))
 
   return (mean, stderr)
-
 
 
 

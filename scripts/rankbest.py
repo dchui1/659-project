@@ -3,6 +3,20 @@ import sys
 import numpy as np
 
 
+def iterate(path, func):
+    sweep_dirs = list(filter(lambda x: x != ".DS_Store", os.listdir(path)))
+    # parameter_sweeps = {}
+    func_dict = {}
+    for dir in sweep_dirs:
+
+        sweep_path = path + dir + "/"
+        run_dirs = list(filter(lambda x: x != ".DS_Store", os.listdir(sweep_path)))
+        res = func(sweep_path)
+        # print("The res", res)
+        func_dict[dir] = res
+
+    return func_dict
+
 def get_best_result(path):
     sweep_dirs = list(filter(lambda x: x != ".DS_Store", os.listdir(path)))
     parameter_sweeps = {}
