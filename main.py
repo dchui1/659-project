@@ -79,9 +79,9 @@ def parse_args():
     parser.add_argument("-p", type=str, default='results', help="base path for saving results")
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
-    if args.p == None or args.r == None or args.i == None:
+    if args.a == None or args.r == None or args.i == None:
         print('Please run again using (without angle braces):')
-        print('python q_learning.py -e path/to/exp.json -i <num> -r <num>')
+        print('python q_learning.py -a path/to/agent.json -b path/to/bonus.json -i <num> -r <num>')
         exit(1)
     return args
 
@@ -98,11 +98,15 @@ Env = registry.getEnvironment(exp)
 Agent = registry.getAgent(exp)
 
 if args.render:
-    pass
-    # print("Render mode")
-    # env = Env(exp.env_params)
-    # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-    # runExperiment(env, exp.env_params['episodes'], agent, args.render)
+    # pass
+    print("Render mode")
+    env = Env(exp.env_params)
+    agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
+    AgentWrapper = registry.getAgentWrapper(bonus_params["name"])
+    agent_wrapper = AgentWrapper(agent, bonus_params)
+    # build the rl-glue instance to handle the agent-environment interface
+    glue = RlGlue(agent_wrapper, env)
+    runExperiment(glue, exp.env_params['episodes'], args.render)
 else:
     (mean, stderr) = averageOverRuns(Agent, Env, exp)
 

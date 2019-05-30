@@ -30,6 +30,7 @@ import numpy as np
 
 RAD2DEG = 57.29577951308232
 
+
 def get_display(spec):
     """Convert a display specification (such as :0) into an actual Display
     object.
