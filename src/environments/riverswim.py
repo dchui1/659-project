@@ -78,7 +78,7 @@ class RiverSwim(Environment, Renderable):
     from src.environments import rendering
     if self.viewer is None:
         print("Create viewer")
-        self.viewer = rendering.Viewer(700,700)
+        self.viewer = rendering.Viewer(600,100)
 
     # create rendering geometry
     if self.render_geoms is None:
@@ -92,7 +92,7 @@ class RiverSwim(Environment, Renderable):
         geom = rendering.make_circle(1)
         xform = rendering.Transform()
         # if 'agent' in entity.name:
-        geom.set_color(*self.AGENT_COLOR, alpha=0.5)
+        geom.set_color(*self.AGENT_COLOR)
         # else:
         #     geom.set_color(*entity.color)
         geom.add_attr(xform)
@@ -101,14 +101,14 @@ class RiverSwim(Environment, Renderable):
 
         goal1 = rendering.make_circle(1)
         goal1_xform = rendering.Transform()
-        goal1.set_color(*self.GOAL_COLOR)
+        goal1.set_color(*self.GOAL_COLOR, alpha=0.5)
         goal1.add_attr(goal1_xform)
         self.render_geoms.append(goal1)
         self.render_geoms_xform.append(goal1_xform)
 
         goal2 = rendering.make_circle(1)
         goal2_xform = rendering.Transform()
-        goal2.set_color(*self.GOAL_COLOR)
+        goal2.set_color(*self.GOAL_COLOR, alpha=0.5)
         goal2.add_attr(goal2_xform)
         self.render_geoms.append(goal2)
         self.render_geoms_xform.append(goal2_xform)
@@ -133,9 +133,10 @@ class RiverSwim(Environment, Renderable):
     # for e, entity in enumerate(self.world.entities):
     #     self.render_geoms_xform[e].set_translation(*entity.state.p_pos)
     print("New agent position:", self.pos, 1)
-    self.render_geoms_xform[0].set_translation(self.pos, 1)
+
     self.render_geoms_xform[1].set_translation(self.river_length, 1) # big goal
     self.render_geoms_xform[2].set_translation(0, 1) #small goal
+    self.render_geoms_xform[0].set_translation(self.pos, 1)
 
     # render to display or array
     results.append(self.viewer.render())
