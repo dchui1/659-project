@@ -1,5 +1,9 @@
 # 659 project
 
+
+[![Build Status](https://travis-ci.org/dchui1/659-project.svg?branch=master)](https://travis-ci.org/dchui1/659-project)
+
+
 ## Setup
 Setup can be done with globally installed packages (default way to setup a python project) or can be setup in a virtual environment (cleaner / easier to maintain, but more up-front work).
 
