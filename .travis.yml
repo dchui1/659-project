@@ -1,3 +1,4 @@
+dist: xenial
 language: python
 python:
   - "3.6"
@@ -7,7 +8,7 @@ git:
 
 # command to install dependencies
 install:
-  - pip install -r requirements.txt
+  - pip install --progress-bar off --quiet -r requirements.txt
 
 # command to run tests
 script:
