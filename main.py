@@ -70,7 +70,7 @@ def averageOverRuns(Agent, Env, exp):
     print("standard dev = ", std_dev)
     print("standard err = ", stderr)
 
-    return (mean, stderr)
+    return (mean, stderr, metric)
 
 
 def parse_args():
@@ -107,7 +107,7 @@ if args.render:
     # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
     # runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
-    (mean, stderr) = averageOverRuns(Agent, Env, exp)
+    (mean, stderr, metric) = averageOverRuns(Agent, Env, exp)
 
 
 # save some metric for performance to file
