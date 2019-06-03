@@ -9,6 +9,7 @@ from src.RLGlue.rl_glue import RlGlue
 from src.ExperimentDescription import ExperimentDescription
 import src.registry as registry
 
+
 def runExperiment(glue, num_episodes, render):
     rewards = []
     steps = []
@@ -24,13 +25,14 @@ def runExperiment(glue, num_episodes, render):
                 glue.environment.render()
 
             (r, s, a, done) = glue.step()
-
+            b = glue.agent.rewardApprox.b
+            # print("bonus = ", b)
             rewards.append(glue.total_reward)
             step += 1
 
         steps.append(step)
         print("Episode", episode, "steps", step)
-        print("Episode", episode, "Total_Reward", glue.total_reward)
+        # print("Episode", episode, "Total_Reward", glue.total_reward)
 
     return (steps, rewards)
 
@@ -54,13 +56,14 @@ def averageOverRuns(Agent, Env, exp):
 
         (steps, r) = runExperiment(glue, exp.env_params['episodes'], False)
         rewards_list.append(r)
-        #print("Completed a run")
+        print("Completed a run")
         total_steps.append(steps)
         # print("Completed run %d of %d"%(, exp.runs)
 
     # take mean / std over runs
-    mean = np.mean(rewards_list, axis=0)
-    std_dev = np.std(rewards_list, axis=0, ddof=1)
+    metric = np.array(total_steps)
+    mean = metric.mean(axis=0)
+    std_dev = metric.std(axis=0)
     stderr = std_dev / np.sqrt(exp.runs)
 
     print("here is the mean over all runs = ", mean)
