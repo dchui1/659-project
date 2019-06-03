@@ -26,16 +26,21 @@ class KernelPrior:
         self.stddev = stddev
 
     def output(self, dtype, shape, name, trainable, add_variable_fn):
-        dist = tfd.Normal(loc=tf.zeros(shape, dtype), scale=dtype.as_numpy_dtype(self.stddev))
+        dist = tfd.Normal(loc=tf.zeros(shape, dtype), scale=dtype.as_numpy_dtype(self.stddev)) #prior mean is zeros
         batch_ndims = tf.size(dist.batch_shape_tensor())
         return tfd.Independent(dist, reinterpreted_batch_ndims=batch_ndims)
 
 class BNN:
-    def __init__(self, features):
+    def __init__(self, features, params={'prior_mean_hidden_layer': -1e-5,
+        'prior_stddev_hidden_layer': 1e-6,
+        'prior_stddev_outer_layer': 1e-8}):
         self.features = features
         # Inputs to the tensorflow graph. X will be our phi(S, A), Y will be our reward
         self.X = tf.placeholder(tf.float32, [None, features])
         self.Y = tf.placeholder(tf.float32, [None, 1])
+        self.hidden_layer_mean = params['prior_mean_hidden_layer']
+        self.hidden_layer_stddev = params['prior_stddev_hidden_layer']
+        self.outer_layer_sttdev = params['prior_stddev_outer_layer']
 
         # Should be expandable to a deep network by adding more layers
         # Can add dense flipout layers for fully bayesian or could add simple dense or convolutional layers
@@ -48,13 +53,13 @@ class BNN:
                 # this creates a vector of learnable independent normal distributions
                 kernel_posterior_fn=tfp_layers_util.default_mean_field_normal_fn(
                     # initialize the mean of the normal distributions randomly so that the means are slightly negative (pessimistic init)
-                    loc_initializer=tf.random_normal_initializer(mean=-1e-5, stddev=1e-6)
+                    loc_initializer=tf.random_normal_initializer(mean=self.hidden_layer_mean, stddev=self.hidden_layer_stddev) # prior mean and stddev of nodes in hidden layer
                 ),
                 # regularize our weights by pulling them towards a N(0, 1e-8) distribution
                 # cannot have a N(0, 0) distribution, so pull them towards something with no variance
-                kernel_prior_fn=KernelPrior(1e-8).output,
+                kernel_prior_fn=KernelPrior(self.outer_layer_sttdev).output, # prior stddev over y's (outputs, in our case th rewards)
                 # Don't use a bias weight here
-                bias_posterior_fn=None,
+                bias_posterior_fn=None, # set to None to keep everything local (local variance over all features)
             )
         ])
 
@@ -100,9 +105,10 @@ class BNN:
 
     def sample(self, x, samples=1000):
         x = self.normalizeXShape(x)
-        feed = {self.X: x}
+        m = np.tile(x, [samples, 1])
+        feed = {self.X: m}
         p = self.predictions
-        s = np.array([p.eval(feed_dict=feed) for i in range(samples)]).flatten()
+        s = np.array(p.eval(feed_dict=feed)).flatten()
         s.sort()
         return s
 
@@ -118,7 +124,8 @@ if __name__ == "__main__":
     # run model
     f = BNN(3)
     s = f.sample(np.array([[1., 0., 0.]]))
-    print("Untrained mean and std", np.mean(s), np.std(s)**2)
+    # print(s)
+    print("Untrained mean and var", np.mean(s), np.std(s)**2)
     print("Weights", f.layers.get_weights())
     f.fit(x, y, epochs=100)
     s = f.sample(np.array([[1., 0., 0.]]))

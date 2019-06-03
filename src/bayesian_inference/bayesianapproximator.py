@@ -62,5 +62,5 @@ class TabularBayesianApproximation(BayesianApproximator):
         except:
             print(scale)
             exit()
-        b = self.w * (r - mu)
+        b = (r - mu)
         return b

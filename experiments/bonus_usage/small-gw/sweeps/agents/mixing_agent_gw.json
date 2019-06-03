@@ -10,7 +10,7 @@
     },
     "envParameters": {
         "steps": 0,
-        "episodes": 1000,
+        "episodes": 1,
         "shape": [5, 5]
     }
 }
