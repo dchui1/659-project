@@ -28,9 +28,9 @@ def runExperiment(glue, num_episodes, render, bonus_params, run):
     num_states = glue.environment.observationShape()[0]
     state_visits_all_episodes = np.zeros(num_states)
     # s0 = np.zeros(glue.environment.STEPS_LIMIT+1)
-    if run == 1:
-        q_values_all_episodes = []
-        bonuses_all_episodes = []
+    # if run == 1:
+    #     q_values_all_episodes = []
+    #     bonuses_all_episodes = []
     # ----- end of debug block --------------------
     for episode in range(num_episodes):
         glue.start()
@@ -47,14 +47,14 @@ def runExperiment(glue, num_episodes, render, bonus_params, run):
             state_visits_all_episodes[state_idx] += 1
             # if state_idx == 0:
             #     s0[step] = 1.0
-            if run == 1:
-                if step % 100 == 0:
-                    q_values_all_episodes.append(np.copy(glue.agent.agent.Q))
-                    bonus_matrix = make_nested_list(num_states) # number of empty lists = number of states in total
-                    for s_i in range(num_states):
-                        bonus_array = glue.agent.compute_bonus_array([s_i])
-                        bonus_matrix[s_i] = bonus_array
-                    bonuses_all_episodes.append(bonus_matrix)
+            # if run == 1:
+            #     if step % 100 == 0:
+            #         q_values_all_episodes.append(np.copy(glue.agent.agent.Q))
+            #         bonus_matrix = make_nested_list(num_states) # number of empty lists = number of states in total
+            #         for s_i in range(num_states):
+            #             bonus_array = glue.agent.compute_bonus_array([s_i])
+            #             bonus_matrix[s_i] = bonus_array
+            #         bonuses_all_episodes.append(bonus_matrix)
             # ---- end of debug block ---------------
 
             rewards.append(glue.total_reward)
@@ -64,9 +64,9 @@ def runExperiment(glue, num_episodes, render, bonus_params, run):
         # print("Episode", episode, "steps", step)
         # print("Episode", episode, "Total_Reward", glue.total_reward)
     # ------ save data for debugging ---------------
-    if run == 1:
-        q_values_all_episodes = np.array(q_values_all_episodes)
-        bonuses_all_episodes = np.array(bonuses_all_episodes)
+    # if run == 1:
+    #     q_values_all_episodes = np.array(q_values_all_episodes)
+    #     bonuses_all_episodes = np.array(bonuses_all_episodes)
         # np.save("tmp/rs/q_values_q{}".format(bonus_params["q"]), q_values_all_episodes)
         # np.save("tmp/rs/b_values_q{}".format(bonus_params["q"]), bonuses_all_episodes)
     # ---- end of debug block ---------------
@@ -145,7 +145,7 @@ if args.render:
     pass
 else:
     (rewards, stderr) = averageOverRuns(Agent, Env, exp, bonus_params)
-    np.save("tmp/rs/aver_epis_q{}_w{}".format(bonus_params["q"], bonus_params["w"]), np.array(rewards, stderr))
+    np.save("tmp/rs/aver_epis_q{}_w{}".format(bonus_params["q"], bonus_params["w"]), np.array([rewards, stderr]))
 
 
 # save some metric for performance to file
