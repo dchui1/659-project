@@ -1,12 +1,11 @@
 {
     "name": "tabular",
-    "agent": "mixing_agent",
+    "agent": "tabular-q",
     "environment": "gridworld",
     "metaParameters": {
-        "epsilon": [0.05, 0.1, 0.2],
-        "alpha" : 0.1,
-        "gamma" : 0.99,
-        "c": 1.0
+        "alpha": [0.1, 0.2, 0.4, 0.8],
+        "epsilon": [0.05, 0.1, 0.15, 0.2],
+        "gamma": 0.99
     },
     "envParameters": {
         "steps": 0,
