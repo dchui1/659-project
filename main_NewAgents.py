@@ -1,18 +1,31 @@
 import random
+import math
 import argparse
 import os
 import numpy as np
 from pickle import dump
+import time
 import json
+from time import sleep
 
 from src.RLGlue.rl_glue import RlGlue
 from src.ExperimentDescription import ExperimentDescription
 import src.registry as registry
 
 
-def runExperiment(glue, num_episodes, render):
+def make_nested_list(num_states=6):
+    nested_list = []
+    list = []
+    for i in range(num_states):
+        nested_list.append(list)
+    return nested_list
+
+
+def runExperiment(glue, num_episodes, render, bonus_params, run):
     rewards = []
     steps = []
+    num_states = glue.environment.observationShape()[0]
+    state_visits_all_episodes = np.zeros(num_states)
     for episode in range(num_episodes):
         glue.start()
         done = False
@@ -22,54 +35,51 @@ def runExperiment(glue, num_episodes, render):
                 print("Render env")
                 glue.environment.render()
             (r, s, a, done) = glue.step()
-            # b = glue.agent.rewardApprox.b
-            # print("bonus = ", b)
+            state_idx = s[0]
+            state_visits_all_episodes[state_idx] += 1
+            rewards.append(glue.total_reward)
             step += 1
-        rewards.append(glue.total_reward)
         steps.append(step)
-        print("Episode", episode, "steps", step, "total reward", glue.total_reward)
-        # print("Episode", episode, "Total_Reward", glue.total_reward)
-
-    return (steps, rewards) # rewards is a list of returns for each episode
+    state_visits_all_episodes = np.array(state_visits_all_episodes/np.sum(state_visits_all_episodes)) * 100
+    return (steps, rewards, state_visits_all_episodes)
 
 
-def averageOverRuns(Agent, Env, exp):
-    rewards_list_allruns = []
+def averageOverRuns(Agent, Env, exp, bonus_params):
+    rewards = []
     total_steps = []
+    sv_allruns = []
     for run in range(exp.runs):
-        # set random seeds before each run
         np.random.seed(run)
         random.seed(run)
-
         # build the environment
         env = Env(exp.env_params)
-
         # build the agent and wrap it with an API compatibility layer
         agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
         AgentWrapper = registry.getAgentWrapper(bonus_params["name"])
         agent_wrapper = AgentWrapper(agent, bonus_params)
         # build the rl-glue instance to handle the agent-environment interface
         glue = RlGlue(agent_wrapper, env)
-        (steps, rlist) = runExperiment(glue, exp.env_params['episodes'], False)
+        (steps, r, sv_run) = runExperiment(glue, exp.env_params['episodes'], False, bonus_params, run=run)
 
-        rewards_list_allruns.append(rlist) # r is a list of rewards for all the episodes in the run
+        rewards.append(r)
         total_steps.append(steps)
-        print("Completed run ", run)
+        sv_allruns.append(sv_run)
+        print("completed run ", run)
 
-    rew_array_allruns = np.array(rewards_list_allruns)
-    step_array_allruns = np.array(total_steps)
-    print(rew_array_allruns.shape)
-    print(step_array_allruns.shape)
-    means_s = step_array_allruns.mean(axis=0)
-    stderrs_s = step_array_allruns.std(axis=0) / np.sqrt(exp.runs)
-    means_r = rew_array_allruns.mean(axis=0)
-    stderrs_r = rew_array_allruns.std(axis=0) / np.sqrt(exp.runs)
+    sv_allruns = np.array(sv_allruns)
+    # np.save("tmp/rs/s_visits_allruns_q{}".format(bonus_params["q"]), sv_allruns)
 
-    print("mean steps over all runs = ", means_s)
-    print("standard err steps = ", stderrs_s)
-    print("mean return over all runs = ", means_r)
-    print("standard err return = ", stderrs_r)
-    return (means_s, stderrs_s, means_r, stderrs_r)
+    # rew_array = np.array(rewards)
+    # total_reward_list = []
+    # for run in range(exp.runs):
+    #     total_reward_list.append(rew_array[run, -1])
+    #
+    # mean_rew = np.mean(total_reward_list)
+    # stderr_rew = np.std(total_reward_list) / np.sqrt(exp.runs)
+    # print("here is the mean over all runs = ", mean_rew)
+    # print("standard error = ", stderr_rew)
+    return total_steps # fix this!
+
 
 def parse_args():
     parser = argparse.ArgumentParser("Bayesian exploration testbed")
@@ -91,7 +101,7 @@ bonus_path = args.b
 if bonus_path is not None:
     with open(bonus_path) as f:
         bonus_params = json.load(f)
-    print("quantile =", bonus_params["q"], " w =", bonus_params["w"])
+    print("quantile = ", bonus_params["q"])
 else:
     bonus_params = {"name": "default"}
 
@@ -102,21 +112,18 @@ Agent = registry.getAgent(exp)
 
 if args.render:
     pass
-    # print("Render mode")
-    # env = Env(exp.env_params)
-    # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-    # runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
-    (mean_s, stderr_s, mean_r, stderr_r) = averageOverRuns(Agent, Env, exp)
-    # np.save("tmp/rs/aver_epis_q{}_w{}_r{}".format(bonus_params["q"], bonus_params["w"], exp.runs), np.array([mean_s, stderr_s, mean_r, stderr_r]))
+    (rewards, stderr_rew) = averageOverRuns(Agent, Env, exp, bonus_params)
+    # np.save("tmp/rs/aver_epis_q{}_w{}".format(bonus_params["q"], bonus_params["w"]), np.array([rewards, stderr_rew]))
 
 
 # save some metric for performance to file
-meanResult_s = np.mean(mean_s)
+print(type(rewards))
+meanResult = np.mean(rewards)
 path = f'{args.p}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
 os.makedirs(path, exist_ok=True)
 with open(f'{path}/mean.csv', 'w') as f:
-    f.write(str(meanResult_s))
+    f.write(str(meanResult))
 
 with open(f'{path}/results.pkl', 'wb') as f:
-    dump({"results": (mean_s, stderr_s)}, f)
+    dump({"results": (rewards, stderr_rew)}, f)
