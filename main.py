@@ -25,17 +25,20 @@ def runExperiment(glue, num_episodes, render):
             # b = glue.agent.rewardApprox.b
             # print("bonus = ", b)
             step += 1
-        rewards.append(glue.total_reward)
+        tr = glue.total_reward
+        rewards.append(tr)
         steps.append(step)
-        print("Episode", episode, "steps", step, "total reward", glue.total_reward)
+        print("Episode", episode, "steps", step, "total reward", tr)
         # print("Episode", episode, "Total_Reward", glue.total_reward)
 
-    return (steps, rewards) # rewards is a list of returns for each episode
+    return (steps, rewards) # steps is a list of #steps required to complete each episode
+    # i.e., steps[i] = # steps to complete episode i, for every i
 
 
 def averageOverRuns(Agent, Env, exp):
     rewards_list_allruns = []
     total_steps = []
+    ts400 = []
     for run in range(exp.runs):
         # set random seeds before each run
         np.random.seed(run)
@@ -52,24 +55,21 @@ def averageOverRuns(Agent, Env, exp):
         glue = RlGlue(agent_wrapper, env)
         (steps, rlist) = runExperiment(glue, exp.env_params['episodes'], False)
 
+        total_steps_400eps = np.sum(steps[:400])
+        ts400.append(total_steps_400eps)
         rewards_list_allruns.append(rlist) # r is a list of rewards for all the episodes in the run
         total_steps.append(steps)
         print("Completed run ", run)
 
     rew_array_allruns = np.array(rewards_list_allruns)
     step_array_allruns = np.array(total_steps)
-    print(rew_array_allruns.shape)
-    print(step_array_allruns.shape)
     means_s = step_array_allruns.mean(axis=0)
     stderrs_s = step_array_allruns.std(axis=0) / np.sqrt(exp.runs)
     means_r = rew_array_allruns.mean(axis=0)
     stderrs_r = rew_array_allruns.std(axis=0) / np.sqrt(exp.runs)
 
-    print("mean steps over all runs = ", means_s)
-    print("standard err steps = ", stderrs_s)
-    print("mean return over all runs = ", means_r)
-    print("standard err return = ", stderrs_r)
-    return (means_s, stderrs_s, means_r, stderrs_r)
+    return (means_s, stderrs_s, means_r, stderrs_r, ts400)
+
 
 def parse_args():
     parser = argparse.ArgumentParser("Bayesian exploration testbed")
@@ -86,12 +86,13 @@ def parse_args():
         exit(1)
     return args
 
+
 args = parse_args()
 bonus_path = args.b
 if bonus_path is not None:
     with open(bonus_path) as f:
         bonus_params = json.load(f)
-    print("quantile =", bonus_params["q"], " w =", bonus_params["w"])
+    # print("quantile =", bonus_params["q"], " w =", bonus_params["w"])
 else:
     bonus_params = {"name": "default"}
 
@@ -107,8 +108,12 @@ if args.render:
     # agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
     # runExperiment(env, exp.env_params['episodes'], agent, args.render)
 else:
-    (mean_s, stderr_s, mean_r, stderr_r) = averageOverRuns(Agent, Env, exp)
+    (mean_s, stderr_s, mean_r, stderr_r, ts400) = averageOverRuns(Agent, Env, exp)
     # np.save("tmp/rs/aver_epis_q{}_w{}_r{}".format(bonus_params["q"], bonus_params["w"], exp.runs), np.array([mean_s, stderr_s, mean_r, stderr_r]))
+
+m_ts400 = np.mean(ts400)
+stderr_ts400 = np.std(ts400)/np.sqrt(exp.runs)
+np.save("tmp/gw/stats_s400_w{}_q{}_r{}".format(bonus_params["w"], bonus_params["q"], exp.runs), np.array([m_ts400, stderr_ts400]))
 
 
 # save some metric for performance to file
