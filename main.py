@@ -22,8 +22,9 @@ def runExperiment(glue, num_episodes, render):
                 print("Render env")
                 glue.environment.render()
             (r, s, a, done) = glue.step()
-            # b = glue.agent.rewardApprox.b
-            # print("bonus = ", b)
+            if done == True or step < 20:
+                b = glue.agent.rewardApprox.b
+                print("bonus = ", b)
             step += 1
         tr = glue.total_reward
         rewards.append(tr)
@@ -92,7 +93,7 @@ bonus_path = args.b
 if bonus_path is not None:
     with open(bonus_path) as f:
         bonus_params = json.load(f)
-    # print("quantile =", bonus_params["q"], " w =", bonus_params["w"])
+    print("quantile =", bonus_params["q"], " w =", bonus_params["w"])
 else:
     bonus_params = {"name": "default"}
 
