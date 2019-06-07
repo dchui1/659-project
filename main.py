@@ -22,9 +22,9 @@ def runExperiment(glue, num_episodes, render):
                 print("Render env")
                 glue.environment.render()
             (r, s, a, done) = glue.step()
-            if done == True or step < 20:
-                b = glue.agent.rewardApprox.b
-                print("bonus = ", b)
+            # if done == True or step < 20:
+            #     b = glue.agent.rewardApprox.b
+            #     print("bonus = ", b)
             step += 1
         tr = glue.total_reward
         rewards.append(tr)
