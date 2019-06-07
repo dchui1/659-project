@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter  # useful for `logit` scale
 
 
-w_vec = [1.0]
+w_vec = w_vec = [1.0, 2.0, 5.0, 7.5, 10.0, 15.0, 20.0]
 runs = 5
 means_ws = []
 errs_ws = []
