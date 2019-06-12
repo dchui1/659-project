@@ -12,6 +12,7 @@ from src.agents.UCB import UCB
 from src.agents.UCLSAgent import UCLSAgent
 
 from src.utils.Bonus_Generator import BayesianBonusGenerator
+from src.utils.LinearBayesianBonusGenerator import LinearBayesianBonusGenerator
 from src.utils.AgentWrapper import AgentWrapper
 # environments
 from src.environments.gridworld import GridWorld
@@ -62,4 +63,6 @@ def getEnvironment(exp):
 def getAgentWrapper(name):
     if name == 'bayesian':
         return BayesianBonusGenerator
+    if name == 'linear_bayesian':
+        return LinearBayesianBonusGenerator
     return AgentWrapper

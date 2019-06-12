@@ -55,12 +55,12 @@ class TabularBayesianApproximation(BayesianApproximator):
 
     def sample(self, x, use_stddev=False):
         mu, nu, alpha, beta = self.B[x, :]
-        scale = max(0, beta * (nu + 1) / (alpha * nu)) # Make sure that the scale is >= 0
+        scale = np.square(self.w) * max(0, beta * (nu + 1) / (alpha * nu)) # Make sure that the scale is >= 0
         df = 2 * alpha
         try:
             r = t.ppf(q=self.q, df=df, loc=mu, scale=scale)
         except:
             print(scale)
             exit()
-        b = self.w * (r - mu)
+        b = (r - mu)
         return b

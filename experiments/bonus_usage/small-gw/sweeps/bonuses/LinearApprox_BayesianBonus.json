@@ -1,0 +1,8 @@
+{
+  "name": "linear_bayesian",
+  "prior_mean_hidden_layer": -1e-5,
+  "prior_stddev_hidden_layer": 1e-6,
+  "prior_stddev_outer_layer": 100,
+  "q": 0.99,
+  "w": 1.0
+}
