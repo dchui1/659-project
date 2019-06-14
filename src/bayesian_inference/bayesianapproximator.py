@@ -20,6 +20,7 @@ class BayesianApproximator():
     def sample(self, x, n):
         raise NotImplementedError
 
+
 class TabularBayesianApproximation(BayesianApproximator):
     def __init__(self, state_dimensions, num_acts, params={"mu_0": 1.0, "nu_0": 1.0, "alpha_0": 0.1, "beta_0": 1.0}):
         super().__init__(state_dimensions, num_acts)
@@ -38,6 +39,9 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.n = np.zeros(num_states * num_acts)  # local count for each (s, a) pair
         self.local_sum_sq = np.zeros(num_states * num_acts)
 
+        self.scale = np.square(self.w) * max(0, self.beta_0 * (self.nu_0 + 1) / (self.alpha_0 * self.nu_0))
+        self.bonus = 0.0
+
     def update_stats(self, x, val=0.0):
         self.n[x] += 1  # local count
         self.empirical_mean[x] += (val - self.empirical_mean[x]) / self.n[x]
@@ -46,7 +50,6 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.B[x, 0] = (self.nu_0 * self.mu_0 + self.n[x] * self.empirical_mean[x]) / (self.nu_0 + self.n[x])
         self.B[x, 1] = self.nu_0 + self.n[x]
         self.B[x, 2] = self.alpha_0 + self.n[x] / 2
-
 
         sum_sq_residuals = self.local_sum_sq[x] - self.n[x] * np.square(self.empirical_mean[x])
         prior_residual_multiplier = ((self.n[x] * self.nu_0) / (self.n[x] + self.nu_0))
@@ -63,5 +66,6 @@ class TabularBayesianApproximation(BayesianApproximator):
             print(scale)
             exit()
         b = r - mu
-        self.b = b
-        return b
+        self.bonus = b
+        self.scale = scale
+        return self.bonus
