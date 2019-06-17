@@ -8,10 +8,12 @@ import json
 from src.RLGlue.rl_glue import RlGlue
 from src.ExperimentDescription import ExperimentDescription
 import src.registry as registry
+from src.environments.Renderable import Renderable
 
 def runExperiment(glue, num_episodes, render):
     rewards = []
     steps = []
+    renderable = isinstance(glue.environment, Renderable)
 
     for episode in range(num_episodes):
         glue.start()
@@ -19,7 +21,7 @@ def runExperiment(glue, num_episodes, render):
 
         step = 0
         while not done:
-            if render:
+            if render and renderable:
                 print("Render env")
                 glue.environment.render()
 
@@ -74,6 +76,7 @@ def parse_args():
     parser = argparse.ArgumentParser("Bayesian exploration testbed")
     parser.add_argument("-i", type=int, help="integer choosing parameter permutation to run")
     parser.add_argument("-a", type=str, help="path to agent description json file")
+    parser.add_argument("-e", type=str, help="path to experiment description (old)")
     parser.add_argument("-b", type=str, help="path to bonus description json file")
     parser.add_argument("-r", type=int, help="number of runs to complete")
     parser.add_argument("-p", type=str, default='results', help="base path for saving results")
@@ -85,38 +88,44 @@ def parse_args():
         exit(1)
     return args
 
-args = parse_args()
-bonus_path = args.b
-if bonus_path is not None:
-    with open(bonus_path) as f:
-        bonus_params = json.load(f)
-else:
-    bonus_params = {"name": "default"}
 
-exp = ExperimentDescription(args.a, args.i, args.r)
-Env = registry.getEnvironment(exp)
-Agent = registry.getAgent(exp)
+def main():
+    args = parse_args()
+    bonus_path = args.b
+    if bonus_path is not None:
+        with open(bonus_path) as f:
+            bonus_params = json.load(f)
+    else:
+        bonus_params = {"name": "default"}
 
-if args.render:
-    # pass
-    print("Render mode")
-    env = Env(exp.env_params)
-    agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
-    AgentWrapper = registry.getAgentWrapper(bonus_params["name"])
-    agent_wrapper = AgentWrapper(agent, bonus_params)
-    # build the rl-glue instance to handle the agent-environment interface
-    glue = RlGlue(agent_wrapper, env)
-    runExperiment(glue, exp.env_params['episodes'], args.render)
-else:
-    (mean, stderr) = averageOverRuns(Agent, Env, exp)
+    exp = ExperimentDescription(args.a, args.i, args.r)
+    Env = registry.getEnvironment(exp)
+    Agent = registry.getAgent(exp)
+
+    if args.render:
+        # pass
+        print("Render mode")
+        env = Env(exp.env_params)
+        agent = Agent(env.observationShape(), env.numActions(), exp.meta_parameters)
+        AgentWrapper = registry.getAgentWrapper(bonus_params["name"])
+        agent_wrapper = AgentWrapper(agent, bonus_params)
+        # build the rl-glue instance to handle the agent-environment interface
+        glue = RlGlue(agent_wrapper, env)
+        runExperiment(glue, exp.env_params['episodes'], args.render)
+    else:
+        (mean, stderr) = averageOverRuns(Agent, Env, exp)
 
 
-# save some metric for performance to file
-meanResult = np.mean(mean)
-path = f'{args.p}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
-os.makedirs(path, exist_ok=True)
-with open(f'{path}/mean.csv', 'w') as f:
-    f.write(str(meanResult))
+        # save some metric for performance to file
+        meanResult = np.mean(mean)
+        path = f'{args.p}/{exp.name}/{exp.environment}/{exp.agent}/{exp.getParamString()}'
+        os.makedirs(path, exist_ok=True)
+        with open(f'{path}/mean.csv', 'w') as f:
+            f.write(str(meanResult))
 
-with open(f'{path}/results.pkl', 'wb') as f:
-    dump({"results": (mean, stderr)}, f)
+        with open(f'{path}/results.pkl', 'wb') as f:
+            dump({"results": (mean, stderr)}, f)
+
+
+if __name__ == "__main__":
+    main()

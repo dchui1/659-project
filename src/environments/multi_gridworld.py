@@ -1,7 +1,8 @@
 from src.environments.Environment import Environment
 import numpy as np
 from src.environments.Renderable import Renderable
-class GridWorld(Environment, Renderable):
+# Gridworld, but with multiple rewards
+class MultiGridWorld(Environment, Renderable):
     _x = 0
     _y = 0
 
@@ -15,12 +16,12 @@ class GridWorld(Environment, Renderable):
         self.shape = params['shape']
         self.maxSteps = params['steps']
         self.small_reward = params['small_reward']
-        self.big_reward = params['big_reward']
+        self.large_reward = params['large_reward']
 
     def getReward(self):
         if self._x == self.shape[0] - 1 and self._y == self.shape[1] - 1:
-            return self.big_reward
-        if self.x == self.shape[0] -1 or self._y == self.shape[1] -1:
+            return self.large_reward
+        if self._x == self.shape[0] -1 or self._y == self.shape[1] -1:
             return self.small_reward
         return 0
 

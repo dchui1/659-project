@@ -11,13 +11,15 @@ from src.agents.UCB import UCB
 # from src.agents.LinearQ_TDistR import TDistRLinearQ
 from src.agents.UCLSAgent import UCLSAgent
 
-from src.utils.Bonus_Generator import BayesianBonusGenerator
-from src.utils.LinearBayesianBonusGenerator import LinearBayesianBonusGenerator
+from src.bonus.Bonus_Generator import BayesianBonusGenerator
+from src.bonus.LinearBayesianBonusGenerator import LinearBayesianBonusGenerator
 from src.utils.AgentWrapper import AgentWrapper
 # environments
 from src.environments.gridworld import GridWorld
 from src.environments.riverswim import RiverSwim
 from src.environments.ContinuousGridworld import CtsGridWorld
+from src.environments.antishaping import Antishaping
+from src.environments.multi_gridworld import MultiGridWorld
 
 def getAgent(exp):
     if exp.agent == 'linear-q':
@@ -48,7 +50,7 @@ def getAgent(exp):
     if exp.agent == 'mixing_agent':
         return Mixing_Agent
 
-    raise NotImplementedError
+    raise NotImplementedError("Specified agent does not exist: ", name)
 
 def getEnvironment(exp):
     if exp.environment == 'cts-gridworld':
@@ -57,12 +59,19 @@ def getEnvironment(exp):
         return GridWorld
     if exp.environment == 'riverswim':
         return RiverSwim
-
-    raise NotImplementedError
+    if exp.environment == 'antishaping':
+        return Antishaping
+    if exp.environment == 'multi-gridworld':
+        return MultiGridWorld
+    raise NotImplementedError("Specified environment does not exist: ", name)
 
 def getAgentWrapper(name):
+    print("in get agent wrapper")
     if name == 'bayesian':
         return BayesianBonusGenerator
     if name == 'linear_bayesian':
         return LinearBayesianBonusGenerator
-    return AgentWrapper
+    if name == 'default':
+        return AgentWrapper
+
+    raise NotImplementedError("Specified agent wrapper does not exist: ", name)

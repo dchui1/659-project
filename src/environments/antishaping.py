@@ -1,17 +1,21 @@
-
+from src.environments.Environment import Environment
+import numpy as np
 class Antishaping(Environment):
     def __init__(self, params):
 
         self.num_states = params["size"]
-        self.max_reward = 1
-        self.numerator = 0.25
+        self.maxSteps = params["steps"]
+        self.max_reward = params["max_reward"]
+        self.shape_numerator = params["shape_numerator"]
         self.pos = 0
         self.previous_position = None
 
     def start(self):
         self.pos = 0
         self.previous_position = None
-        raise NotImplementedError()
+        self.steps = 0
+        return np.array([self.pos])
+
 
     def step(self, action):
         self.previous_position = self.pos
@@ -30,14 +34,14 @@ class Antishaping(Environment):
 
 
     def observationShape(self):
-        return [num_states]
+        return [self.num_states]
 
     def numActions(self):
         return 2
 
     def getReward(self):
-        left_reward = self.numerator / (self.pos + 1)
-        right_reward = self.numerator / (self.pos + 1)
+        left_reward = self.shape_numerator / (self.pos + 1)
+        right_reward = self.shape_numerator / (self.pos + 1)
         if self.pos == self.num_states - 1:
             right_reward = self.max_reward
         if self.previous_position < self.pos:
@@ -45,10 +49,10 @@ class Antishaping(Environment):
         else:
             return left_reward
 
-    def bound(x, min, max):
-        b = max if x >= max else x
-        b = 0 if b <= min else b
-        return b
+def bound(x, min, max):
+    b = max if x >= max else x
+    b = 0 if b <= min else b
+    return b
 
   #
   # void create_antishape(size_t num_states)

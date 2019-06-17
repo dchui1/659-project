@@ -1,0 +1,19 @@
+{
+    "name": "tabular",
+    "agent": "tabular-q",
+    "environment": "antishaping",
+    "metaParameters": {
+        "epsilon": [0.12, 0.05, 0.1, 0.2],
+        "alpha" : 0.37,
+        "gamma" : 0.95,
+        "c":[0.0, 0.5, 1.0]
+    },
+    "envParameters": {
+        "steps": 5000,
+        "size": 10,
+        "max_reward": 1,
+        "shape_numerator": 0.25,
+        "episodes": 1
+
+    }
+}
