@@ -15,17 +15,20 @@ class PosterBayesianQLearningTabular(TabularQ):
         self.gamma = params['gamma']
         self.bayesianQ = TabularQApproximation(state_shape, num_acts, self.gamma, params)
         self.percentile = params['percentile']
+        self.q = params['q']
 
     def learn(self, s, sp, r, a, gamma):
         x = self.getIndex(s) + (a * self.num_states)
         ap = self.maxAction(sp)
         x_next = self.getIndex(sp) + (ap * self.num_states)
-        self.bayesianQ.update_stats(x, x_next, r, gamma)
+        next_value = self.bayesianQ.B[x_next,0]
+        value = r + gamma * next_value
+        self.bayesianQ.update_stats(x, value)
 
     def maxAction(self, s):
         # we sample 100 for each
-        self.act_vals = [self.bayesianQ.sample(self.getIndex(s) + (a * self.num_states), 100) for a in range(self.num_acts)]
-        # get the nth percentie
-        self.act_vals = np.sort(self.act_vals, axis=1)[:,self.percentile-1]
+        self.act_vals = [self.bayesianQ.sample(self.getIndex(s) + (a * self.num_states), 1) for a in range(self.num_acts)]
+        # get the nth percentile
+        #self.act_vals = np.sort(self.act_vals, axis=1)[:, self.percentile-1]
         move = argMax(self.act_vals)
         return move
