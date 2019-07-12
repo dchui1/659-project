@@ -4,7 +4,7 @@ from src.bayesian_inference.bayesianapproximator import TabularBayesianApproxima
 
 class TabularQApproximation(TabularBayesianApproximation):
     def __init__(self, state_dimensions, num_acts, gamma, params={'mu_0': 1.0, 'nu_0': 1.0, 'alpha_0': 1.5, 'beta_0': 2.0}):
-        super().__init__(state_dimensions, num_acts)
+        super().__init__(state_dimensions, num_acts, params)
         num_states = np.prod(state_dimensions)
         self.state_shape = state_dimensions
         self.B = np.zeros((num_states * num_acts, 4))
@@ -40,7 +40,8 @@ class TabularQApproximation(TabularBayesianApproximation):
         scale = np.square(self.w) * max(0, beta * (nu + 1)/(nu * alpha))
         df = 2 * alpha
         try:
-            q_sa = t.rvs(df=df, loc=mu, scale=scale, size=1)
+            # q_sa = t.rvs(df=df, loc=mu, scale=scale, size=n) #before Poster
+            q_sa = t.ppf(q=self.q, df=df, loc=mu, scale=scale) #for Poster only
         except Exception as e:
             print(e)
             print(scale)
