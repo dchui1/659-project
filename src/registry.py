@@ -4,6 +4,7 @@ from src.agents.TabularQ import TabularQ
 from src.agents.TabularRTabularQ import TabularRTabularQ
 # from src.agents.BnnRTabularQ import BnnRTabularQ
 from src.agents.BayesianQLearningTabular import BayesianQLearningTabular
+from src.agents.PosterBayesianQLearningTabular import PosterBayesianQLearningTabular
 from src.agents.Dual_Vf import Dual_Vf
 from src.agents.Mixing_Agent import Mixing_Agent
 from src.agents.RiverswimOptimal import Optimal
@@ -31,6 +32,9 @@ def getAgent(exp):
         return TabularRTabularQ
     if exp.agent == 'bayesian-q-learning':
         return BayesianQLearningTabular
+
+    if exp.agent == 'poster-bayesian-q-learning':
+        return PosterBayesianQLearningTabular
 
     if exp.agent == 'blr tabular-q':
         # return BnnRTabularQ
