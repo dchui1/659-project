@@ -1,6 +1,7 @@
 __pycache__
 .vscode
 659env/
+659/
 env/
 *#
 *~
