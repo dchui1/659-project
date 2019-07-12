@@ -14,6 +14,7 @@ class TabularQApproximation(TabularBayesianApproximation):
         self.nu_0 = params['nu_0']  # prior "observations that make the prior mean"
         self.alpha_0 = params['alpha_0']  # prior IG shape
         self.beta_0 = params['beta_0']  # prior IG scale
+        self.w = params['w']
 
         self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0]
         self.action_var = [np.zeros(num_states)] * num_acts
@@ -36,7 +37,7 @@ class TabularQApproximation(TabularBayesianApproximation):
 
     def sample(self, x, n, use_stddev=False):
         mu, nu, alpha, beta = self.B[x, :]
-        scale = max(0, beta * (nu + 1)/(nu * alpha))
+        scale = np.square(self.w) * max(0, beta * (nu + 1)/(nu * alpha))
         df = 2 * alpha
         try:
             q_sa = t.rvs(df=df, loc=mu, scale=scale, size=1)
