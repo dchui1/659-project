@@ -38,7 +38,7 @@ class TabularQApproximation(TabularBayesianApproximation):
 
     def sample(self, x, n, use_stddev=False):
         mu, nu, alpha, beta = self.B[x, :]
-        scale = max(0, beta * (nu + 1)/(nu * alpha)) #np.square(self.w) * max(0.01, beta * (nu + 1)/(nu * alpha))
+        scale = np.square(self.w) * max(0.001, beta * (nu + 1)/(nu * alpha)) #np.square(self.w) * max(0.01, beta * (nu + 1)/(nu * alpha))
         df = 2 * alpha
         try:
             q_sa = t.rvs(df=df, loc=mu, scale=scale, size=n) #before Poster
