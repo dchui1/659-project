@@ -1,6 +1,6 @@
 {
     "name": "tabular",
-    "agent": "poster-bayesian-q-learning",
+    "agent": "bayesian-q-learning",
     "environment": "gridworld",
     "metaParameters": {
         "epsilon": 0.0,
@@ -11,13 +11,12 @@
 	"nu_0": 1.0,
 	"alpha_0": 0.55,
 	"beta_0": 1.0,
-	"q": [0.50, 0.75, 0.99],
-	"w": [0.1, 0.5, 1.0, 10.0, 100.0],
-	"percentile": 99
+	"q": [0.0],
+	"w": [0.0]
     },
     "envParameters": {
         "steps": 0,
         "episodes": 1000,
-        "shape": [30, 30]
+        "shape": [20, 20]
     }
 }

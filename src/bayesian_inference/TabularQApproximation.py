@@ -19,7 +19,7 @@ class TabularQApproximation(TabularBayesianApproximation):
         self.B[:] = [self.mu_0, self.nu_0, self.alpha_0, self.beta_0]
         self.action_var = [np.zeros(num_states)] * num_acts
 
-    """
+
     def update_stats(self, x, x_next, val, gamma):
         self.n[x] += 1
         m1 = val + gamma * self.B[x_next, 0]
@@ -34,23 +34,15 @@ class TabularQApproximation(TabularBayesianApproximation):
         self.B[x, 3] = self.beta_0 + 0.5 * self.n[x] * (
             m2 - np.square(m1)) + 0.5 * self.n[x] * (self.nu_0 * np.square(
                 m1 - self.mu_0)) / (self.nu_0 + self.n[x])
-    """
+
 
     def sample(self, x, n, use_stddev=False):
         mu, nu, alpha, beta = self.B[x, :]
-        if x == 903:
-            print('info', beta)
-        scale = np.square(self.w) * max(0.01, beta * (nu + 1)/(nu * alpha))
+        scale = max(0, beta * (nu + 1)/(nu * alpha)) #np.square(self.w) * max(0.01, beta * (nu + 1)/(nu * alpha))
         df = 2 * alpha
-        if x == 903:
-            print('scale', scale)
         try:
-            # q_sa = t.rvs(df=df, loc=mu, scale=scale, size=n) #before Poster
-            """
-            if (x == 900):
-                print('scale', x, scale)
-            """
-            q_sa = t.ppf(q=self.q, df=df, loc=mu, scale=scale) #for Poster only
+            q_sa = t.rvs(df=df, loc=mu, scale=scale, size=n) #before Poster
+
         except Exception as e:
             print(e)
             print(scale)

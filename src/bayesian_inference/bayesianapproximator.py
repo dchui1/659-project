@@ -47,7 +47,6 @@ class TabularBayesianApproximation(BayesianApproximator):
         self.B[x, 1] = self.nu_0 + self.n[x]
         self.B[x, 2] = self.alpha_0 + self.n[x] / 2
 
-
         sum_sq_residuals = self.local_sum_sq[x] - self.n[x] * np.square(self.empirical_mean[x])
         prior_residual_multiplier = ((self.n[x] * self.nu_0) / (self.n[x] + self.nu_0))
         prior_residual_sq = 0.5 * np.square(self.empirical_mean[x] - self.mu_0)

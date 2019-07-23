@@ -30,7 +30,7 @@ def runExperiment(glue, num_episodes, render):
 
         steps.append(step)
         print("Episode", episode, "steps", step)
-        print("Episode", episode, "Total_Reward", glue.total_reward)
+        # print("Episode", episode, "Total_Reward", glue.total_reward)
 
     return (steps, rewards)
 
