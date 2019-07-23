@@ -28,7 +28,7 @@ def getAgent(exp):
         return TabularQ
     if exp.agent == 'ucb':
         return UCB
-    if exp.agent == 'tabular-r tabular-q':
+    if exp.agent == 'brb':
         return TabularRTabularQ
     if exp.agent == 'bayesian-q-learning':
         return BayesianQLearningTabular
