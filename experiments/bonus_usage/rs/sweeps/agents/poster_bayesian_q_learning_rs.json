@@ -1,0 +1,21 @@
+{
+    "name": "tabular",
+    "agent": "bayesian-q-learning",
+    "environment": "riverswim",
+    "metaParameters": {
+        "epsilon": 0.0,
+        "alpha" : [0.025, 0.05, 0.1, 0.2, 0.4],
+        "gamma" : 0.99,
+        "c": 1.0,
+	      "mu_0": 0.0,
+        "nu_0": 1.0,
+        "alpha_0": 0.55,
+        "beta_0": 1.0,
+        "q": [0.0],
+        "w": [0.5, 1.0, 10.0, 100.0]
+    },
+    "envParameters": {
+        "steps": 5000,
+        "episodes": 1
+    }
+}
